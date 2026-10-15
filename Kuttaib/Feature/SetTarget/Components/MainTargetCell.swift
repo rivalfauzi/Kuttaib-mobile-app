@@ -45,7 +45,7 @@ final class MainTargetCell: UICollectionViewCell {
         iconBackground.addSubview(icon)
         
         badgeLabel.translatesAutoresizingMaskIntoConstraints = false
-        badgeLabel.text = "Populer"
+        badgeLabel.text = "Rekomendasi"
         badgeLabel.font = .systemFont(ofSize: 12)
         badgeLabel.textColor = .white
         badge.backgroundColor = .goldAccent

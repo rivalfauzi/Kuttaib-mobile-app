@@ -8,11 +8,11 @@
 import Foundation
 
 final class SetTargetPresenter {
-    let store: SetTargetStore
     let coordinator: SetTargetCoordinator
-    var mainTargetSelectedIndex: Int?
+    var targetDataStore: SetTargetData = SetTargetData()
+    var surahData: [Quran.Surah.Response]?
     
-    let targetData: [SetTargetEntity] = [
+    var targetData: [SetTargetEntity] = [
         .init(
             title: "Apa Target Hafalanmu?",
             subtitle: "Pilih sesuai kemampuan dan tujuanmu. Tenang, ini bisa diubah nanti.",
@@ -20,21 +20,31 @@ final class SetTargetPresenter {
             items: [
                 .init(
                     title: "Juz 30",
-                    subtitle: "Cocok untuk pemula, berisi surah-surah pendek.",
+                    subtitle: "Cocok untuk pemula",
                     icon: "book.pages.fill",
                     populer: true,
-                    value: 30
+                    value: 30,
+                    type: SetTargetData.TargetSelectionTab.juz.rawValue
                 ),
                 .init(
-                    title: "1 Surah",
-                    subtitle: "Mulai dari surah favoritmu",
-                    icon: "bookmark.fill",
+                    title: "Al-Mulk",
+                    subtitle: "Surah pendek populer",
+                    icon: "moon.stars.fill",
                     populer: false,
-                    value: 1
+                    value: 67,
+                    type: SetTargetData.TargetSelectionTab.surah.rawValue
+                ),
+                .init(
+                    title: "Ar-Rahmaan",
+                    subtitle: "Favorit banyak penghafal",
+                    icon: "sparkles",
+                    populer: false,
+                    value: 55,
+                    type: SetTargetData.TargetSelectionTab.surah.rawValue
                 ),
                 .init(
                     title: "Custom",
-                    subtitle: "Pilih surah juz atau surah yang ingin dihafal",
+                    subtitle: "Pilih surah atau juz",
                     icon: "slider.horizontal.3",
                     populer: false,
                     value: 0
@@ -51,28 +61,24 @@ final class SetTargetPresenter {
                     subtitle: "Santai dan konsisten",
                     icon: "leaf.fill",
                     populer: false,
-                    value: 3
+                    value: 3,
+                    type: SetTargetData.DailyTargetType.ayat.rawValue
                 ),
                 .init(
                     title: "5 ayat",
                     subtitle: "Seimbang dan efektif",
                     icon: "tree.fill",
                     populer: false,
-                    value: 5
+                    value: 5,
+                    type: SetTargetData.DailyTargetType.ayat.rawValue
                 ),
                 .init(
                     title: "10 ayat",
                     subtitle: "Untuk kamu yang lebih cepat",
                     icon: "sparkles",
                     populer: false,
-                    value: 10
-                ),
-                .init(
-                    title: "1 halaman",
-                    subtitle: "Cocok jika terbiasa menghafal per halaman",
-                    icon: "book.pages.fill",
-                    populer: false,
-                    value: 1
+                    value: 10,
+                    type: SetTargetData.DailyTargetType.ayat.rawValue
                 )
             ]
         ),
@@ -110,15 +116,64 @@ final class SetTargetPresenter {
                     value: 60
                 )
             ]
-        )
+        ),
+        .init(title: "Target Hafalan Siap!", subtitle: "Berikut adalah ringkasan targetmu. Kamu bisa mengubahnya nanti di pengaturan.", type: .confirm, items: [])
     ]
     
-    init(store: SetTargetStore, coordinator: SetTargetCoordinator) {
-        self.store = store
+    init(coordinator: SetTargetCoordinator) {
         self.coordinator = coordinator
     }
     
     func navigate(_ type: SetTargetCoordinator.SetTargetButtonTapped) {
         coordinator.navigate(type)
+    }
+    
+    func fetch(callback: @escaping (Result<[Quran.Surah.Response], Error>) -> Void) {
+        QuranRepository.fetchSurah(callback: callback)
+    }
+    
+    func fetchQuranMetaData(callback: @escaping (Result<Quran.MetaData.Response, Error>) -> Void) {
+        QuranRepository.fetchMetaData(callback: callback)
+    }
+    
+    func calculateTarget(_ metaData: Quran.MetaData.Response, callback: @escaping () -> Void) {
+        guard let dailyTarget = targetDataStore.dailyTarget,
+            let mainTarget = targetDataStore.mainTarget,
+            let surahData
+        else { return }
+        
+        var totalAyat: Int
+        var daysEstimate: Int
+        
+        switch mainTarget.type {
+        case .juz:
+            guard let juzData = JSONReaderHelper.getJuzData(by: mainTarget.value, data: metaData) else { return }
+            
+            let arrayOfSurahs = JSONReaderHelper.getSurahInJuz(in: juzData, surahs: surahData)
+            
+            totalAyat = JSONReaderHelper.totalAyahInJuz(in: juzData, surahs: arrayOfSurahs)
+        case .surah:
+            guard let surah = JSONReaderHelper.getSurahData(by: mainTarget.value, data: surahData) else { return }
+            
+            totalAyat = surah.numberOfAyahs
+        }
+
+        switch dailyTarget.type {
+        case .ayat:
+            daysEstimate = totalAyat/dailyTarget.value
+        case .page:
+            daysEstimate = 0
+        }
+        
+        if let index = targetData.indices.last {
+            let mainTargetLabel = "\(mainTarget.type.rawValue) \(mainTarget.value)"
+            let items: [MainTargetEntity] = [
+                .init(title: "Target", subtitle: mainTargetLabel, icon: "book.pages.fill", populer: false, value: 0)
+            ]
+            
+            targetData[index].items = items
+            
+            callback()
+        }
     }
 }

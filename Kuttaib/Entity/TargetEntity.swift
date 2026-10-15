@@ -13,17 +13,46 @@ struct MainTargetEntity {
     let icon: String
     let populer: Bool
     let value: Int
+    var type: String?
 }
 
 struct SetTargetEntity {
     let title: String
     let subtitle: String
     let type: SetTargetViewType
-    let items: [MainTargetEntity]
+    var items: [MainTargetEntity]
 }
 
 enum SetTargetViewType {
     case main
     case daily
     case time
+    case confirm
+}
+
+struct SetTargetData {
+    var mainTarget: MainTargetData?
+    var dailyTarget: DailyTargetData?
+    var timeTarget: Int?
+    
+    
+    struct MainTargetData {
+        let value: Int
+        let type: TargetSelectionTab
+    }
+    
+    enum TargetSelectionTab: String {
+        case juz
+        case surah
+    }
+    
+    struct DailyTargetData {
+        let value: Int
+        let type: DailyTargetType
+    }
+    
+    enum DailyTargetType: String {
+        case ayat
+        case page
+    }
 }

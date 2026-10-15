@@ -10,6 +10,7 @@ import UIKit
 final class SetTargetCell: UICollectionViewCell {
     static let identifier = "SetTargetCell"
     
+    private let topImage = UIImageView()
     private let titleLabel = UILabel()
     private let descLabel = UILabel()
     private let topVStack = UIStackView()
@@ -40,6 +41,12 @@ final class SetTargetCell: UICollectionViewCell {
     }
     
     private func setup() {
+        topImage.contentMode = .scaleAspectFit
+        let image = UIImage(named: "setTargetConfirm")
+        let ratio = (image?.size.height ?? 1) / (image?.size.width ?? 1)
+        topImage.image = image
+        topImage.isHidden = true
+        
         titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = .black
         titleLabel.numberOfLines = 0
@@ -50,7 +57,7 @@ final class SetTargetCell: UICollectionViewCell {
         descLabel.numberOfLines = 0
         descLabel.textAlignment = .center
         
-        [titleLabel, descLabel].forEach {
+        [topImage, titleLabel, descLabel].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             topVStack.addArrangedSubview($0)
         }
@@ -66,6 +73,9 @@ final class SetTargetCell: UICollectionViewCell {
         }
         
         NSLayoutConstraint.activate([
+            topImage.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 0.5),
+            topImage.heightAnchor.constraint(equalTo: topImage.widthAnchor, multiplier: ratio),
+            
             topVStack.topAnchor.constraint(equalTo: contentView.topAnchor),
             topVStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
             topVStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
@@ -90,8 +100,14 @@ final class SetTargetCell: UICollectionViewCell {
     func setConfiguration(_ item: SetTargetEntity) {
         titleLabel.text = item.title
         descLabel.text = item.subtitle
-        items = item.items
-        contentCollectionView.reloadData()
+        
+        if case .confirm = item.type {
+            topImage.isHidden = false
+        } else {
+            topImage.isHidden = true
+            items = item.items
+            contentCollectionView.reloadData()
+        }
     }
 }
 
@@ -129,7 +145,7 @@ extension SetTargetCell: UICollectionViewDelegateFlowLayout {
     ) -> CGSize {
         return CGSize(
             width: collectionView.bounds.width,
-            height: 100
+            height: 80
         )
     }
 

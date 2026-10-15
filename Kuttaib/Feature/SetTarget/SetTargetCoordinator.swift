@@ -10,7 +10,6 @@ import UIKit
 class SetTargetCoordinator {
     let navigation: UINavigationController
     let mainCoordinator: MainCoordinator
-    let store = SetTargetStore()
     
     init(mainCoordinator: MainCoordinator) {
         self.mainCoordinator = mainCoordinator
@@ -23,7 +22,7 @@ class SetTargetCoordinator {
     }
     
     func start() {
-        let presenter = SetTargetPresenter(store: store, coordinator: self)
+        let presenter = SetTargetPresenter(coordinator: self)
         let vc = SetTargetContainerViewController(presenter: presenter)
         navigation.pushViewController(vc, animated: true)
     }
