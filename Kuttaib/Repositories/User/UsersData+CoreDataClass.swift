@@ -1,0 +1,14 @@
+//
+//  UsersData+CoreDataClass.swift
+//  Kuttaib
+//
+//  Created by mco on 19/10/26.
+//
+
+import Foundation
+import CoreData
+
+@objc(UsersData)
+public class UsersData: NSManagedObject {
+    
+}

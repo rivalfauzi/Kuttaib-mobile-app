@@ -107,11 +107,12 @@ final class SetTargetContainerViewController: BaseViewController {
     private func setupAction() {
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
+        skipButton.addTarget(self, action: #selector(skipButtonTapped), for: .touchUpInside)
         
-        sheet.didSelect = { [weak self] index, type in
+        sheet.didSelect = { [weak self] index, type, name in
             guard let self else { return }
             
-            setDataStore(.main, data: .init(title: "", subtitle: "", icon: "", populer: false, value: index, type: type))
+            setDataStore(.main, data: .init(title: name, subtitle: "", icon: "", populer: false, value: index, type: type.rawValue))
         }
     }
     
@@ -120,8 +121,14 @@ final class SetTargetContainerViewController: BaseViewController {
             return
         }
         
+        if stepIndex == 0 {
+            skipButton.isHidden = false
+        } else {
+            skipButton.isHidden = true
+        }
+        
         if stepIndex == (presenter.targetData.count - 1) {
-            nextButton.updateTitle("Mulai Hari Ini")
+            nextButton.updateTitle("Hitung Target")
         } else {
             nextButton.updateTitle("Lanjutkan")
         }
@@ -140,7 +147,7 @@ final class SetTargetContainerViewController: BaseViewController {
                 let type = SetTargetData.TargetSelectionTab(rawValue: dataType)
             else { return }
             
-            presenter.targetDataStore.mainTarget = .init(value: data.value, type: type)
+            presenter.targetDataStore.mainTarget = .init(value: data.value, name: data.title, type: type)
         case .daily:
             guard let dataType = data.type,
                 let type = SetTargetData.DailyTargetType(rawValue: dataType)
@@ -149,8 +156,6 @@ final class SetTargetContainerViewController: BaseViewController {
             presenter.targetDataStore.dailyTarget = .init(value: data.value, type: type)
         case .time:
             presenter.targetDataStore.timeTarget = data.value
-        case .confirm:
-            break
         }
     }
     
@@ -184,13 +189,32 @@ final class SetTargetContainerViewController: BaseViewController {
         showLoading()
         presenter.fetchQuranMetaData {[weak self] result in
             guard let self else { return }
+            
+            switch result {
+            case .success(let response):
+                presenter.calculateTarget(response) { data in
+                    self.saveData(data)
+                }
+            case .failure(let error):
+                hideLoading()
+                print("Error: \(error)")
+            }
+        }
+    }
+    
+    private func saveData(_ items: [MainTargetEntity]) {
+        presenter.saveData { [weak self] result in
+            guard let self else { return }
+            
             hideLoading()
             
             switch result {
             case .success(let response):
-                presenter.calculateTarget(response) {
-                    self.stepIndex += 1
-                    self.scrollToCurrentStep()
+                if response {
+                    print("Simpan berhasil")
+                    presenter.navigate(.confirm(items))
+                } else {
+                    print("Simpan gagal")
                 }
             case .failure(let error):
                 print("Error: \(error)")
@@ -202,18 +226,23 @@ final class SetTargetContainerViewController: BaseViewController {
         if stepIndex == 0 {
             presenter.navigate(.back)
         } else {
+            presenter.selectedDataIndexes.removeValue(forKey: stepIndex)
             stepIndex -= 1
             scrollToCurrentStep()
         }
     }
     
     @objc private func nextButtonTapped() {
-        if (stepIndex + 1) < (presenter.targetData.count - 1) {
+        if (stepIndex + 1) < (presenter.targetData.count) {
             stepIndex += 1
             scrollToCurrentStep()
         } else {
             calculateTargetData()
         }
+    }
+    
+    @objc private func skipButtonTapped() {
+        
     }
 }
 
@@ -230,10 +259,13 @@ extension SetTargetContainerViewController: UICollectionViewDelegate, UICollecti
         
         if indexPath.item < presenter.targetData.count {
             let item = presenter.targetData[indexPath.item]
+            let selectedIndex = presenter.selectedDataIndexes[stepIndex]
             
             cell.didSelectItem = { [weak self] index in
                 guard let self else { return }
                 let selectedData = item.items[index]
+                presenter.selectedDataIndexes[stepIndex] = index
+                nextButton.isEnabled = true
                 
                 if case .main = item.type, selectedData.title == "Custom" {
                     self.showPopupCustomTarget()
@@ -242,7 +274,8 @@ extension SetTargetContainerViewController: UICollectionViewDelegate, UICollecti
                 }
             }
             
-            cell.setConfiguration(item)
+            nextButton.isEnabled = selectedIndex != nil
+            cell.setConfiguration(item, index: selectedIndex)
         }
         
         return cell
@@ -250,5 +283,9 @@ extension SetTargetContainerViewController: UICollectionViewDelegate, UICollecti
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return collectionView.bounds.size
+    }
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        contentCollectionView.reloadData()
     }
 }

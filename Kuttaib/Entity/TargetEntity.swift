@@ -27,7 +27,6 @@ enum SetTargetViewType {
     case main
     case daily
     case time
-    case confirm
 }
 
 struct SetTargetData {
@@ -37,8 +36,9 @@ struct SetTargetData {
     
     
     struct MainTargetData {
-        let value: Int
-        let type: TargetSelectionTab
+        var value: Int
+        var name: String?
+        var type: TargetSelectionTab
     }
     
     enum TargetSelectionTab: String {

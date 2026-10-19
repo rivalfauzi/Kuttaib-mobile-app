@@ -8,7 +8,7 @@
 import UIKit
 
 final class TargetPickerBottomSheet: UIViewController {
-    var didSelect: ((Int, String) -> Void)?
+    var didSelect: ((Int, SetTargetData.TargetSelectionTab, String) -> Void)?
 
     private var selectedTab: SetTargetData.TargetSelectionTab = .juz
     private let juzButton = UIButton(type: .system)
@@ -121,8 +121,7 @@ extension TargetPickerBottomSheet: UITableViewDataSource, UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath
-)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
 
         switch selectedTab {
         case .juz:
@@ -135,7 +134,9 @@ extension TargetPickerBottomSheet: UITableViewDataSource, UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        didSelect?(indexPath.row, selectedTab.rawValue)
+        guard indexPath.row < surahItems.count else { return }
+        let name = selectedTab == .surah ? surahItems[indexPath.row].englishName : ""
+        didSelect?((indexPath.row + 1), selectedTab, name)
 
         dismiss(animated: true)
     }

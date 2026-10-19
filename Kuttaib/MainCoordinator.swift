@@ -16,18 +16,14 @@ class MainCoordinator {
     }
     
     func start() {
-//        
-//        let hasCompletedOnboarding = UserDefaults.standard.bool(
-//            forKey: "hasCompletedOnboarding"
-//        )
-//        
-//        if hasCompletedOnboarding {
-//            showMainApp()
-//        } else {
-//            showOnboarding()
-//        }
+        window.rootViewController = navigationController
+        let hasCompletedOnboarding = UserDefaults.standard.bool( forKey: "hasCompletedOnboarding")
         
-        showOnboarding()
+        if hasCompletedOnboarding {
+            showMainApp()
+        } else {
+            showOnboarding()
+        }
     }
 }
 
@@ -35,7 +31,11 @@ extension MainCoordinator {
     func showOnboarding() {
         let coordinator = OnboardingCoordinator(mainCoordinator: self)
         coordinator.start()
-        window.rootViewController = navigationController
+    }
+    
+    func showMainApp() {
+        let coordinator = MainAppCoordinator(mainCoordinator: self)
+        coordinator.start()
     }
     
     func navigate(to: NavigateTo) {
@@ -45,6 +45,8 @@ extension MainCoordinator {
         case .setTarget:
             let coordinator = SetTargetCoordinator(mainCoordinator: self)
             coordinator.start()
+        case .mainApp:
+            showMainApp()
         }
     }
 }
@@ -52,4 +54,5 @@ extension MainCoordinator {
 enum NavigateTo {
     case back
     case setTarget
+    case mainApp
 }

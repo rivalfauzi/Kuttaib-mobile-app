@@ -19,6 +19,8 @@ class SetTargetCoordinator {
     enum SetTargetButtonTapped {
         case back
         case skip
+        case confirm([MainTargetEntity])
+        case home
     }
     
     func start() {
@@ -33,6 +35,12 @@ class SetTargetCoordinator {
             mainCoordinator.navigate(to: .back)
         case .skip:
             break
+        case .confirm(let data):
+            let presenter = ConfirmTargetPresenter(coordinator: self, data: data)
+            let vc = ConfirmTargetViewController(presenter: presenter)
+            navigation.pushViewController(vc, animated: true)
+        case .home:
+            mainCoordinator.navigate(to: .mainApp)
         }
     }
 }
