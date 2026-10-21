@@ -8,47 +8,6 @@
 import Foundation
 import CoreData
 
-//final class UserRepository {
-//
-//    private let context = CoreDataManager.shared.context
-//
-//    func fetchUser() -> User? {
-//        let request: NSFetchRequest<User> = User.fetchRequest()
-//
-//        return try? context.fetch(request).first
-//    }
-//
-//    func createUser(
-//        name: String,
-//        dailyVerseTarget: Int16,
-//        dailyStudyTime: Int16
-//    ) -> User {
-//
-//        let user = User(context: context)
-//
-//        user.id = UUID()
-//        user.name = name
-//        user.dailyVerseTarget = dailyVerseTarget
-//        user.dailyStudyTime = dailyStudyTime
-//
-//        CoreDataManager.shared.save()
-//
-//        return user
-//    }
-//
-//    func updatePreferences(
-//        dailyVerseTarget: Int16,
-//        dailyStudyTime: Int16
-//    ) {
-//        guard let user = fetchUser() else { return }
-//
-//        user.dailyVerseTarget = dailyVerseTarget
-//        user.dailyStudyTime = dailyStudyTime
-//
-//        CoreDataManager.shared.save()
-//    }
-//}
-
 enum UserRepository {
     static func saveUser(data: UserModel, callback: @escaping ((Result<Bool, Error>) -> Void)) {
         let context = CoreDataManager.shared.context

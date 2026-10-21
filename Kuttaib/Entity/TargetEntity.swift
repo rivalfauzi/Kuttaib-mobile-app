@@ -38,12 +38,7 @@ struct SetTargetData {
     struct MainTargetData {
         var value: Int
         var name: String?
-        var type: TargetSelectionTab
-    }
-    
-    enum TargetSelectionTab: String {
-        case juz
-        case surah
+        var type: TargetType
     }
     
     struct DailyTargetData {
@@ -55,4 +50,9 @@ struct SetTargetData {
         case ayat
         case page
     }
+}
+
+enum TargetType: String {
+    case juz
+    case surah
 }

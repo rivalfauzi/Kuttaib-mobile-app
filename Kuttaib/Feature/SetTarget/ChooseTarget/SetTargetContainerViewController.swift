@@ -144,7 +144,7 @@ final class SetTargetContainerViewController: BaseViewController {
         switch type {
         case .main:
             guard let dataType = data.type,
-                let type = SetTargetData.TargetSelectionTab(rawValue: dataType)
+                let type = TargetType(rawValue: dataType)
             else { return }
             
             presenter.targetDataStore.mainTarget = .init(value: data.value, name: data.title, type: type)

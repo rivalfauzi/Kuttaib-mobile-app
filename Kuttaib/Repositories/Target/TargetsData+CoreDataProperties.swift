@@ -21,17 +21,21 @@ extension TargetsData {
     @NSManaged public var completedVerseCount: Int16
     @NSManaged public var completedAt: Date?
     @NSManaged public var createdAt: Date?
+    @NSManaged public var tasks: NSSet?
     
     func toModel() -> TargetModel {
-        TargetModel(
+        let taskModels = (tasks as? Set<TasksData>)?.map { $0.toModel() } ?? []
+        
+        return TargetModel(
             id: id,
             targetNumber: Int(targetNumber),
-            targetType: targetType,
+            targetType: TargetType(rawValue: targetType ?? ""),
             totalVerseCount: Int(totalVerseCount),
             completedVerseCount: Int(completedVerseCount),
             status: status,
             createdAt: createdAt,
-            completedAt: completedAt
+            completedAt: completedAt,
+            tasks: taskModels
         )
     }
 }

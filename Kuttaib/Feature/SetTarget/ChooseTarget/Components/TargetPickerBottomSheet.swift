@@ -8,9 +8,9 @@
 import UIKit
 
 final class TargetPickerBottomSheet: UIViewController {
-    var didSelect: ((Int, SetTargetData.TargetSelectionTab, String) -> Void)?
+    var didSelect: ((Int, TargetType, String) -> Void)?
 
-    private var selectedTab: SetTargetData.TargetSelectionTab = .juz
+    private var selectedTab: TargetType = .juz
     private let juzButton = UIButton(type: .system)
     private let surahButton = UIButton(type: .system)
     private let tableView = UITableView()

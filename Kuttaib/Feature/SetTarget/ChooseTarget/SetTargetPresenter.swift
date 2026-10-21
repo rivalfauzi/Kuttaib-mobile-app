@@ -26,7 +26,7 @@ final class SetTargetPresenter {
                     icon: "book.pages.fill",
                     populer: true,
                     value: 30,
-                    type: SetTargetData.TargetSelectionTab.juz.rawValue
+                    type: TargetType.juz.rawValue
                 ),
                 .init(
                     title: "Al-Mulk",
@@ -34,7 +34,7 @@ final class SetTargetPresenter {
                     icon: "moon.stars.fill",
                     populer: false,
                     value: 67,
-                    type: SetTargetData.TargetSelectionTab.surah.rawValue
+                    type: TargetType.surah.rawValue
                 ),
                 .init(
                     title: "Ar-Rahmaan",
@@ -42,7 +42,7 @@ final class SetTargetPresenter {
                     icon: "sparkles",
                     populer: false,
                     value: 55,
-                    type: SetTargetData.TargetSelectionTab.surah.rawValue
+                    type: TargetType.surah.rawValue
                 ),
                 .init(
                     title: "Custom",
@@ -145,36 +145,34 @@ final class SetTargetPresenter {
             return
         }
         
-        callback(.success(true))
+        let group = DispatchGroup()
+        var saveError: Error?
         
-//        let group = DispatchGroup()
-//        var saveError: Error?
-//        
-//        group.enter()
-//        let user = UserModel(name: "Penghafal", dailyVerseTarget: dailyTarget, dailyStudyTime: timeTarget)
-//        
-//        UserRepository.saveUser(data: user) { result in
-//            if case .failure(let error) = result {
-//                saveError = error
-//            }
-//            group.leave()
-//        }
-//        
-//        group.enter()
-//        TargetRepository.createTarget(data: targetModel) { result in
-//            if case .failure(let error) = result {
-//                saveError = error
-//            }
-//            group.leave()
-//        }
-//        
-//        group.notify(queue: .main) {
-//            if let error = saveError {
-//                callback(.failure(error))
-//            } else {
-//                callback(.success(true))
-//            }
-//        }
+        group.enter()
+        let user = UserModel(name: "Penghafal", dailyVerseTarget: dailyTarget, dailyStudyTime: timeTarget)
+        
+        UserRepository.saveUser(data: user) { result in
+            if case .failure(let error) = result {
+                saveError = error
+            }
+            group.leave()
+        }
+        
+        group.enter()
+        TargetRepository.createTarget(data: targetModel) { result in
+            if case .failure(let error) = result {
+                saveError = error
+            }
+            group.leave()
+        }
+        
+        group.notify(queue: .main) {
+            if let error = saveError {
+                callback(.failure(error))
+            } else {
+                callback(.success(true))
+            }
+        }
     }
     
     func calculateTarget(_ metaData: Quran.MetaData.Response, callback: @escaping ([MainTargetEntity]) -> Void) {
@@ -201,7 +199,7 @@ final class SetTargetPresenter {
                 totalAyat = surah.numberOfAyahs
             }
             
-            targetModel.targetType = mainTarget.type.rawValue
+            targetModel.targetType = mainTarget.type
             targetModel.targetNumber = mainTarget.value
             targetModel.totalVerseCount = totalAyat
 

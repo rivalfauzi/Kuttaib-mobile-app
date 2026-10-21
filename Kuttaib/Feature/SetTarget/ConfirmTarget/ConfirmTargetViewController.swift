@@ -93,6 +93,7 @@ final class ConfirmTargetViewController: BaseViewController {
     }
     
     @objc private func nextButtonTapped() {
+        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         presenter.onNextButtonTapped()
     }
 }

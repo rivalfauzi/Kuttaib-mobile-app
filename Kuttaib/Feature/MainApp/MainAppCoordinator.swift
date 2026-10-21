@@ -21,9 +21,8 @@ class MainAppCoordinator {
     }
     
     func start() {
-        let presenter = HomePresenter(coordinator: self)
-        let vc = HomeViewController(presenter: presenter)
-        
+        let vc = MainTabBarController(coordinator: self)
+        navigation.isNavigationBarHidden = true
         navigation.setViewControllers([vc], animated: true)
     }
     
