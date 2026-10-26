@@ -38,4 +38,18 @@ enum QuranRepository {
             callback(.failure(error))
         }
     }
+    
+    static func fetchAyah(callback: @escaping (Result<[Quran.Ayahs.Response], Error>) -> Void) {
+        do {
+            let jsonResource = Bundle.main.url(
+                forResource: "QuranPagesResponse",
+                withExtension: "json"
+            )!
+            let responseBody = try Data(contentsOf: jsonResource)
+            let decoded = try JSONDecoder().decode([Quran.Ayahs.Response].self, from: responseBody)
+            callback(.success(decoded))
+        } catch {
+            callback(.failure(error))
+        }
+    }
 }

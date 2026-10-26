@@ -205,4 +205,8 @@ final class HomePresenter {
         
         return newTask
     }
+    
+    func navigateTo(_ navigate: HomeCoordinator.Navigate) {
+        coordinator.navigateTo(navigate)
+    }
 }

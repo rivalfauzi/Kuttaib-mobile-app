@@ -10,6 +10,10 @@ import UIKit
 final class HomeCoordinator {
     let navigationController: UINavigationController
     
+    enum Navigate {
+        case MemorizationSession(task: TaskModel, surah: Quran.Surah.Response?)
+    }
+    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
@@ -19,5 +23,16 @@ final class HomeCoordinator {
         let vc = HomeViewController(presenter: presenter)
 
         navigationController.setViewControllers([vc], animated: false)
+    }
+    
+    func navigateTo(_ navigate: Navigate) {
+        switch navigate {
+        case .MemorizationSession(let task, let surah):
+            let presenter = MemorizationPresenter(task: task, surah: surah)
+            let vc = MemorizationViewController(presenter: presenter)
+            vc.hidesBottomBarWhenPushed = true
+            
+            navigationController.pushViewController(vc, animated: true)
+        }
     }
 }

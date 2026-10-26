@@ -19,6 +19,8 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
     private let centerVStack = UIStackView()
     private let mainHStack = UIStackView()
     
+    var onTappedRightButton: (()->Void)?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -54,6 +56,7 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         centerVStack.spacing = 4
         
         rightButton.layer.cornerRadius = 12
+        rightButton.setHeight(44)
         
         [backgroundIcon, centerVStack, rightButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -76,7 +79,6 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
             icon.trailingAnchor.constraint(equalTo: backgroundIcon.trailingAnchor, constant: -8),
             icon.bottomAnchor.constraint(equalTo: backgroundIcon.bottomAnchor, constant: -8),
             
-            rightButton.heightAnchor.constraint(equalToConstant: 44),
             rightButton.widthAnchor.constraint(equalTo: rightButton.heightAnchor, multiplier: 1.8),
             
             mainHStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
@@ -84,6 +86,8 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
             mainHStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             mainHStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
         ])
+        
+        rightButton.addTarget(self, action: #selector(onButtonTapped), for: .touchUpInside)
     }
     
     func setCofigure(_ item: TaskModel, surahName: String) {
@@ -116,5 +120,9 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         default:
             break
         }
+    }
+    
+    @objc private func onButtonTapped() {
+        onTappedRightButton?()
     }
 }

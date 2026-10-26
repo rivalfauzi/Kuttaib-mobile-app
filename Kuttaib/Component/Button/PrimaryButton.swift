@@ -8,15 +8,18 @@
 import UIKit
 
 class PrimaryButton: UIButton {
+    private var heightConstraint: NSLayoutConstraint!
+    private var color: UIColor = .primaryGreen {
+        didSet {
+            backgroundColor = color
+        }
+    }
+    
     override var isHighlighted: Bool {
         didSet {
-            backgroundColor = isHighlighted
-            ? .primaryGreenPressed
-            : .primaryGreen
+            backgroundColor = isHighlighted ? color.withAlphaComponent(0.8) : color
             
-            transform = isHighlighted
-            ? CGAffineTransform(scaleX: 0.98, y: 0.98)
-            : .identity
+            transform = isHighlighted ? CGAffineTransform(scaleX: 0.98, y: 0.98) : .identity
         }
     }
     
@@ -47,12 +50,24 @@ class PrimaryButton: UIButton {
         )
         
         layer.cornerRadius = 16
-        NSLayoutConstraint.activate([
-            heightAnchor.constraint(equalToConstant: 56)
-        ])
+        
+        heightConstraint = heightAnchor.constraint(equalToConstant: 56)
+        heightConstraint.isActive = true
     }
     
     func updateTitle(_ title: String) {
         setTitle(title, for: .normal)
+    }
+    
+    func setHeight(_ height: CGFloat) {
+        heightConstraint.constant = height
+    }
+    
+    func setColor(_ color: UIColor, titleColor: UIColor? = nil) {
+        self.color = color
+        
+        if let titleColor {
+            setTitleColor(titleColor, for: .normal)
+        }
     }
 }

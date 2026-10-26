@@ -21,6 +21,20 @@ enum Quran {
         }
     }
     
+    enum Ayahs {
+        struct Response: Decodable {
+            let number: Int
+            let text: String
+            let surah: Surah.Response
+            let numberInSurah: Int
+            let juz: Int
+            let manzil: Int
+            let page: Int
+            let ruku: Int
+            let hizbQuarter: Int
+        }
+    }
+    
     enum MetaData {
         
         struct Response: Decodable {

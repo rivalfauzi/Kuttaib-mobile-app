@@ -32,6 +32,7 @@ final class HomeViewController: BaseViewController {
         super.viewDidLoad()
         setup()
         setupListener()
+        setupAction()
         presenter.initialService()
     }
     
@@ -131,6 +132,13 @@ final class HomeViewController: BaseViewController {
             self.taskSection.setDataTask(data, surahData: presenter.surahData)
         }
     }
+    
+    private func setupAction() {
+        taskSection.onTappedButton = {[weak self] task, surah in
+            guard let self else { return }
+            presenter.navigateTo(.MemorizationSession(task: task, surah: surah))
+        }
+    }
 }
 
 final class HomeHeroCard: UIView {
@@ -174,6 +182,7 @@ final class HomeHeroCard: UIView {
         
         detailButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         detailButton.layer.cornerRadius = 22
+        detailButton.setHeight(44)
         
         [titleCard, targetLabel, descLabel, detailButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -212,8 +221,6 @@ final class HomeHeroCard: UIView {
             mainHStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
             mainHStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
             
-            detailButton.heightAnchor.constraint(equalToConstant: 44),
-            
             progressView.widthAnchor.constraint(equalTo: rightView.heightAnchor),
             progressView.heightAnchor.constraint(equalTo: rightView.heightAnchor),
             progressView.centerXAnchor.constraint(equalTo: rightView.centerXAnchor),
@@ -249,6 +256,8 @@ final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataS
     
     var dataTask: [TaskModel] = []
     var surahData: [Quran.Surah.Response]?
+    
+    var onTappedButton: ((TaskModel, Quran.Surah.Response?)->Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -308,11 +317,15 @@ final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataS
         
         let taskData = dataTask[indexPath.item]
         
-        let surahName = surahData?.first {
+        let surah = surahData?.first {
             $0.number == taskData.surahNumber
         }
         
-        cell.setCofigure(taskData, surahName: surahName?.englishName ?? "")
+        cell.onTappedRightButton = { [weak self] in
+            self?.onTappedButton?(taskData, surah)
+        }
+        
+        cell.setCofigure(taskData, surahName: surah?.englishName ?? "")
         
         return cell
     }
