@@ -16,6 +16,7 @@ final class MemorizationPresenter {
     enum ViewType {
         case learn
         case record
+        case done
     }
     
     init(task: TaskModel, surah: Quran.Surah.Response?) {

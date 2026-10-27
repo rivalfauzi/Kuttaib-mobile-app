@@ -23,7 +23,7 @@ final class MemorizeAyahSections: UIView {
     }
     
     private func setup() {
-        arabicText.font = UIFont(name: "KFGQPCUthmanicScriptHAFS", size: 36)
+        arabicText.font = UIFont(name: "KFGQPCUthmanicScriptHAFS", size: 32)
         arabicText.textColor = .black
         arabicText.textAlignment = .center
         arabicText.numberOfLines = 0

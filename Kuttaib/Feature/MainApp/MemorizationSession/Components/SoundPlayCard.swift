@@ -81,6 +81,7 @@ final class SoundPlayCard: UIView {
         audioStack.axis = .horizontal
         audioStack.spacing = 16
         audioStack.alignment = .center
+        audioStack.translatesAutoresizingMaskIntoConstraints = false
         
         rates.forEach { rate in
             let button = UIButton(type: .system)
@@ -101,21 +102,26 @@ final class SoundPlayCard: UIView {
         speedStackView.axis = .horizontal
         speedStackView.spacing = 8
         speedStackView.distribution = .fillEqually
+        speedStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        [audioStack, speedStackView].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            addSubview($0)
-        }
+        let mainVStack = UIStackView(arrangedSubviews: [
+            audioStack,
+            speedStackView
+        ])
+        
+        mainVStack.axis = .vertical
+        mainVStack.spacing = 12
+        mainVStack.alignment = .fill
+        mainVStack.distribution = .fill
+        mainVStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        addSubview(mainVStack)
         
         NSLayoutConstraint.activate([
-            audioStack.topAnchor.constraint(equalTo: topAnchor, constant: 24),
-            audioStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
-            audioStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
-            
-            speedStackView.topAnchor.constraint(equalTo: audioStack.bottomAnchor, constant: 12),
-            speedStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
-            speedStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
-            speedStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
+            mainVStack.topAnchor.constraint(equalTo: topAnchor, constant: 24),
+            mainVStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
+            mainVStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
+            mainVStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
             
             playButton.heightAnchor.constraint(equalToConstant: 44),
             playButton.widthAnchor.constraint(equalToConstant: 44),
@@ -140,6 +146,10 @@ final class SoundPlayCard: UIView {
         let rate = rates[sender.tag]
         selectedRate = rate
         updateButtons()
+    }
+    
+    func hideSpeedStackView(_ hide: Bool) {
+        speedStackView.isHidden = hide
     }
     
 }
