@@ -25,7 +25,7 @@ enum TaskRepository {
         }
     }
     
-    static func createTask(data: TaskModel, callback: @escaping (Result<TasksData, Error>) -> Void) {
+    static func createTask(data: TaskModel, callback: @escaping (Result<TaskModel, Error>) -> Void) {
         let context = CoreDataManager.shared.context
         
         let requestTarget: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
@@ -52,10 +52,50 @@ enum TaskRepository {
 
                 try context.save()
 
-                callback(.success(task))
+                callback(.success(task.toModel()))
             } else {
                 callback(.failure(RepositoryError.activeTargetNotFound))
             }
+        } catch {
+            callback(.failure(error))
+        }
+    }
+    
+    static func updateTask(data: TaskModel, callback: @escaping (Result<TaskModel, Error>) -> Void) {
+        guard let id = data.id else {
+            callback(.failure(RepositoryError.dataNotFound))
+            return
+        }
+        
+        let context = CoreDataManager.shared.context
+        let request: NSFetchRequest<TasksData> = TasksData.fetchRequest()
+        
+        request.predicate = NSPredicate(
+            format: "id == %@",
+            id as CVarArg
+        )
+        
+        request.fetchLimit = 1
+        
+        do {
+            if let task = try context.fetch(request).first {
+                if let completedEndAyah = data.completedEndAyah {
+                    task.completedEndAyah = Int16(completedEndAyah)
+                }
+                
+                if let status = data.status {
+                    task.status = status.rawValue
+                }
+                
+                if let endAyah = data.endAyah {
+                    task.endAyah = Int16(endAyah)
+                }
+                
+                try context.save()
+            } else {
+                callback(.failure(RepositoryError.dataNotFound))
+            }
+            
         } catch {
             callback(.failure(error))
         }

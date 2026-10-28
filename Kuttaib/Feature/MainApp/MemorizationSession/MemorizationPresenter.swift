@@ -8,7 +8,7 @@
 import Foundation
 
 final class MemorizationPresenter {
-    let task: TaskModel
+    var task: TaskModel
     let surah: Quran.Surah.Response?
     var ayahs: [Quran.Ayahs.Response] = []
     var viewState: ViewType = .learn
@@ -35,6 +35,17 @@ final class MemorizationPresenter {
             $0.surah.number == surah?.number &&
             $0.numberInSurah >= startAyah &&
             $0.numberInSurah <= endAyah
+        }
+    }
+    
+    func saveTaskUpdate(callback: @escaping (Result<TaskModel, Error>) -> Void) {
+        task.completedEndAyah = (task.completedEndAyah ?? 0) + 1
+        
+        if task.id != nil {
+            TaskRepository.updateTask(data: task, callback: callback)
+        } else {
+            task.status = .inProgress
+            TaskRepository.createTask(data: task, callback: callback)
         }
     }
 }

@@ -42,10 +42,9 @@ final class MemorizationViewController: BaseViewController {
     let showAyahButton = PrimaryButton(title: "Tampilkan Ayat")
     
     // done type
-    let doneTopSpacer = UIView()
     let doneIcon = UIImageView()
     let doneTitle = UILabel()
-    let doneBottomSpacer = UIView()
+    let doneDesc = UILabel()
     let doneVStack = UIStackView()
     
     let mainVStack = UIStackView()
@@ -96,7 +95,7 @@ final class MemorizationViewController: BaseViewController {
         micLabelDesc.numberOfLines = 0
         micLabelDesc.text = "Tekan tombol untuk mulai merekam."
         
-        [topSpacer, recordHideTitle, recordHideSubtitle, micButton, micLabelDesc, bottomSpacer].forEach {
+        [recordHideTitle, recordHideSubtitle, micButton, micLabelDesc].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             recordHideVStackView.addArrangedSubview($0)
         }
@@ -124,29 +123,33 @@ final class MemorizationViewController: BaseViewController {
             forCellWithReuseIdentifier: MemorizeAyahCell.reuseIdentifier
         )
         
-        doneTitle.font = .systemFont(ofSize: 18, weight: .bold)
+        doneTitle.font = .systemFont(ofSize: 24, weight: .bold)
         doneTitle.textColor = .black
         doneTitle.textAlignment = .center
         doneTitle.numberOfLines = 0
         doneTitle.text = "Rekaman Selesai"
         
-        doneIcon.image = UIImage(systemName: "checkmark.circle.fill")
-        doneIcon.tintColor = .primaryGreen
+        doneDesc.font = .systemFont(ofSize: 16)
+        doneDesc.textColor = .systemGray
+        doneDesc.textAlignment = .center
+        doneDesc.numberOfLines = 0
+        doneDesc.text = "Dengarkan kembali bacaanmu sebelum lanjut ke ayat berikutnya."
         
-        [doneTopSpacer, doneIcon, doneTitle, doneBottomSpacer].forEach {
+        doneIcon.image = UIImage(named: "il-done-record")
+        doneIcon.contentMode = .scaleAspectFit
+        doneIcon.clipsToBounds = true
+        
+        [doneIcon, doneTitle, doneDesc].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             doneVStack.addArrangedSubview($0)
         }
-        
-        doneTopSpacer.setContentHuggingPriority(.defaultLow, for: .vertical)
-        doneBottomSpacer.setContentHuggingPriority(.defaultLow, for: .vertical)
         
         doneVStack.axis = .vertical
         doneVStack.spacing = 16
         doneVStack.alignment = .center
         doneVStack.distribution = .fill
         
-        [stepIndicatorView, learnCollectionView, recordHideView, doneVStack, soundCard, showAyahButton, nextButton, skipButton].forEach {
+        [stepIndicatorView, topSpacer, learnCollectionView, recordHideView, doneVStack, bottomSpacer, soundCard, showAyahButton, nextButton, skipButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             mainVStack.addArrangedSubview($0)
         }
@@ -183,9 +186,7 @@ final class MemorizationViewController: BaseViewController {
             
             learnCollectionView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.4),
             
-            doneIcon.heightAnchor.constraint(equalToConstant: 80),
-            doneIcon.widthAnchor.constraint(equalToConstant: 80),
-            doneTopSpacer.heightAnchor.constraint(equalTo: doneBottomSpacer.heightAnchor),
+            doneIcon.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
         ])
         
         setupConditionalView()
@@ -234,7 +235,11 @@ final class MemorizationViewController: BaseViewController {
             case .success(let response):
                 presenter.getAyahsTask(response)
                 stepIndex = presenter.task.completedEndAyah ?? 0
+                stepIndicator.update(step: stepIndex)
                 learnCollectionView.reloadData()
+                
+                let indexPath = IndexPath(item: stepIndex, section: 0)
+                learnCollectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
             case .failure(let error):
                 print(error)
             }
@@ -318,7 +323,36 @@ final class MemorizationViewController: BaseViewController {
     }
     
     @objc private func nextAyah() {
-        swipeView()
+//        presenter.saveTaskUpdate { [weak self] result in
+//            guard let self else { return }
+//            
+//            switch result {
+//            case .success(let response):
+//                presenter.task = response
+//                
+//                if response.completedEndAyah == response.endAyah {
+//                    
+//                } else {
+//                    swipeView()
+//                }
+//            case .failure(let error):
+//                print("Error: \(error)")
+//            }
+//        }
+        let vc = TaskCompletedViewController()
+
+        vc.modalPresentationStyle = .overCurrentContext
+        vc.modalTransitionStyle = .crossDissolve
+
+        vc.onContinue = {
+            print("Generate task berikutnya")
+        }
+
+        vc.onFinish = {
+            print("Kembali ke dashboard")
+        }
+
+        present(vc, animated: false)
     }
     
     @objc private func startMemorizeTapped() {
@@ -329,9 +363,39 @@ final class MemorizationViewController: BaseViewController {
         case .record:
             break
         case .done:
-            presenter.viewState = .learn
-            setupConditionalView()
-            swipeView()
+//            presenter.saveTaskUpdate {[weak self] result in
+//                guard let self else { return }
+//                
+//                switch result {
+//                case .success(let response):
+//                    presenter.task = response
+//                    
+//                    if response.completedEndAyah == response.endAyah {
+//                        
+//                    } else {
+//                        presenter.viewState = .learn
+//                        setupConditionalView()
+//                        swipeView()
+//                    }
+//                case .failure(let error):
+//                    print("Error: \(error)")
+//                }
+//            }
+            
+            let vc = TaskCompletedViewController()
+
+            vc.modalPresentationStyle = .overCurrentContext
+            vc.modalTransitionStyle = .crossDissolve
+
+            vc.onContinue = {
+                print("Generate task berikutnya")
+            }
+
+            vc.onFinish = {
+                print("Kembali ke dashboard")
+            }
+
+            present(vc, animated: false)
         }
     }
     

@@ -151,13 +151,13 @@ final class HomePresenter {
             guard let juzData = juzsData?[targetNumber - 1] else { return nil }
             
             if let lastTask {
-                guard let surahNumber = lastTask.surahNumber, let taskStart = lastTask.startAyah else { return nil }
+                guard let surahNumber = lastTask.surahNumber, let taskStart = lastTask.startAyah, let completedEndAyah = lastTask.completedEndAyah else { return nil }
                 
                 var taskSurahData = surahData.first {
                     $0.number == surahNumber
                 }
                 
-                var startAyah = taskStart + 1
+                var startAyah = taskStart + completedEndAyah + 1
                 var endAyah: Int
                 
                 if surahNumber == juzData.endSurah {
@@ -193,8 +193,8 @@ final class HomePresenter {
             newTask.surahNumber = surahData?.number
             var startAyah = 1
             
-            if let lastTask, let completeAyah = lastTask.completedEndAyah  {
-                startAyah = completeAyah + 1
+            if let lastTask, let taskStart = lastTask.startAyah, let completeAyah = lastTask.completedEndAyah  {
+                startAyah = taskStart + completeAyah + 1
                 newTask.startAyah = startAyah
             } else {
                 newTask.startAyah = startAyah
