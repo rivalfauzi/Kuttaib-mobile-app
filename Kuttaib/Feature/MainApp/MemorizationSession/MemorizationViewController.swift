@@ -10,6 +10,8 @@ import UIKit
 final class MemorizationViewController: BaseViewController {
     let presenter: MemorizationPresenter
     
+    let subtitleLabel = UILabel()
+    
     let stepIndicator = StepIndicatorView()
     let stepIndicatorView = UIView()
     let topSpacer = UIView()
@@ -48,6 +50,8 @@ final class MemorizationViewController: BaseViewController {
     let doneVStack = UIStackView()
     
     let mainVStack = UIStackView()
+    
+    let alertCompleted = TaskCompletedViewController()
     
     var stepIndex = 0
     private var recordingTimer: Timer?
@@ -190,6 +194,7 @@ final class MemorizationViewController: BaseViewController {
         ])
         
         setupConditionalView()
+        setupAlertView()
         
         nextButton.addTarget(self, action: #selector(startMemorizeTapped), for: .touchUpInside)
         micButton.addTarget(self, action: #selector(recordTapped), for: .touchUpInside)
@@ -203,7 +208,6 @@ final class MemorizationViewController: BaseViewController {
         titleLabel.font = .boldSystemFont(ofSize: 18)
         titleLabel.textAlignment = .center
 
-        let subtitleLabel = UILabel()
         subtitleLabel.text = "\(presenter.surah?.englishName ?? "") \(presenter.task.startAyah ?? 0) - \(presenter.task.endAyah ?? 0)"
         subtitleLabel.font = .systemFont(ofSize: 14)
         subtitleLabel.textColor = .secondaryLabel
@@ -233,13 +237,22 @@ final class MemorizationViewController: BaseViewController {
             
             switch result {
             case .success(let response):
-                presenter.getAyahsTask(response)
-                stepIndex = presenter.task.completedEndAyah ?? 0
+                presenter.allOfAyah = response
+                presenter.getAyahsTask()
+                
+                if case .done = presenter.task.status {
+                    stepIndex = (presenter.task.completedEndAyah ?? 0) - 1
+                } else {
+                    stepIndex = presenter.task.completedEndAyah ?? 0
+                }
+                
                 stepIndicator.update(step: stepIndex)
-                learnCollectionView.reloadData()
+                reloadCollectionView()
                 
                 let indexPath = IndexPath(item: stepIndex, section: 0)
                 learnCollectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+                
+                updateView()
             case .failure(let error):
                 print(error)
             }
@@ -253,6 +266,7 @@ final class MemorizationViewController: BaseViewController {
             soundCard.hideSpeedStackView(false)
             nextButton.isHidden = false
             skipButton.isHidden = false
+            skipButton.setTitle("Sudah Hafal", for: .normal)
             learnCollectionView.isHidden = false
             
             recordHideView.isHidden = true
@@ -262,7 +276,9 @@ final class MemorizationViewController: BaseViewController {
         case .record:
             soundCard.isHidden = true
             nextButton.isHidden = true
-            skipButton.isHidden = true
+            skipButton.isHidden = false
+            skipButton.setTitle("Kembali", for: .normal)
+            skipButton.setColorEnable(true)
             learnCollectionView.isHidden = true
             
             recordHideView.isHidden = false
@@ -280,7 +296,13 @@ final class MemorizationViewController: BaseViewController {
             soundCard.isHidden = false
             soundCard.hideSpeedStackView(true)
             nextButton.isHidden = false
-            nextButton.updateTitle("Lanjut ke Ayat Berikutnya")
+            
+            if let completedEndAyah = presenter.task.completedEndAyah, stepIndex < completedEndAyah {
+                nextButton.updateTitle("Simpan Perubahan")
+            } else {
+                nextButton.updateTitle("Lanjut ke Ayat Berikutnya")
+            }
+            
             skipButton.isHidden = true
             learnCollectionView.isHidden = true
             
@@ -293,11 +315,22 @@ final class MemorizationViewController: BaseViewController {
     }
     
     private func updateView() {
-        guard let completedEndAyah = presenter.task.completedEndAyah else { return }
+        guard let completedEndAyah = presenter.task.completedEndAyah, let status = presenter.task.status else { return }
+        skipButton.setTitle("Sudah Hafal", for: .normal)
         
         if stepIndex == completedEndAyah {
+            nextButton.updateTitle("Mulai Menghafal")
             nextButton.isEnabled = true
             skipButton.setColorEnable(true)
+        } else if (stepIndex + 1) == completedEndAyah, case .done = status {
+            nextButton.updateTitle("Ulang Hafalan")
+            nextButton.isEnabled = true
+            skipButton.setColorEnable(true)
+            skipButton.setTitle("Lanjut ke Ayat Berikutnya", for: .normal)
+        } else if stepIndex < completedEndAyah {
+            nextButton.updateTitle("Ulang Hafalan")
+            nextButton.isEnabled = true
+            skipButton.setColorEnable(false)
         } else {
             nextButton.isEnabled = false
             skipButton.setColorEnable(false)
@@ -317,42 +350,89 @@ final class MemorizationViewController: BaseViewController {
         updateView()
     }
     
+    private func setupAlertView() {
+        alertCompleted.modalPresentationStyle = .overCurrentContext
+        alertCompleted.modalTransitionStyle = .crossDissolve
+        
+        alertCompleted.onContinue = {[weak self] in
+            self?.updateEndTask()
+        }
+        
+        alertCompleted.onFinish = { [weak self] in
+            guard let self else { return }
+            presenter.finishTask { result in
+                switch result {
+                case .success(_):
+                    self.presenter.navigateToRootView()
+                case .failure(let error):
+                    print("Error: \(error)")
+                }
+            }
+        }
+    }
+    
+    private func reloadCollectionView() {
+        learnCollectionView.reloadData()
+        learnCollectionView.layoutIfNeeded()
+    }
+    
+    private func updateEndTask() {
+        presenter.addTaskTarget { result in
+            switch result {
+            case .success(let response):
+                self.presenter.task = response
+                let totalTask = (response.endAyah ?? 0) - (response.startAyah ?? 0) + 1
+                self.stepIndicator.updateTotalSteps(total: totalTask)
+                self.presenter.getAyahsTask()
+                self.reloadCollectionView()
+                self.subtitleLabel.text = "\(self.presenter.surah?.englishName ?? "") \(response.startAyah ?? 0) - \(response.endAyah ?? 0)"
+                
+                self.presenter.viewState = .learn
+                self.setupConditionalView()
+                self.swipeView()
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+    }
+    
     
     @objc private func notificationTapped() {
         
     }
     
     @objc private func nextAyah() {
-//        presenter.saveTaskUpdate { [weak self] result in
-//            guard let self else { return }
-//            
-//            switch result {
-//            case .success(let response):
-//                presenter.task = response
-//                
-//                if response.completedEndAyah == response.endAyah {
-//                    
-//                } else {
-//                    swipeView()
-//                }
-//            case .failure(let error):
-//                print("Error: \(error)")
-//            }
-//        }
-        let vc = TaskCompletedViewController()
-
-        vc.modalPresentationStyle = .overCurrentContext
-        vc.modalTransitionStyle = .crossDissolve
-
-        vc.onContinue = {
-            print("Generate task berikutnya")
+        switch presenter.viewState {
+        case .learn:
+            guard let status = presenter.task.status else { return }
+            
+            if case .done = status {
+                updateEndTask()
+            } else {
+                presenter.saveTaskUpdate(taskCompleted: (stepIndex + 1)) { [weak self] result in
+                    guard let self else { return }
+                    
+                    switch result {
+                    case .success(let response):
+                        presenter.task = response
+                        
+                        if response.lastCompletedAyah == response.endAyah {
+                            present(alertCompleted, animated: false)
+                        } else {
+                            swipeView()
+                        }
+                    case .failure(let error):
+                        print("Error: \(error)")
+                    }
+                }
+            }
+        case .record:
+            presenter.viewState = .learn
+            setupConditionalView()
+            updateView()
+        case .done:
+            break
         }
-
-        vc.onFinish = {
-            print("Kembali ke dashboard")
-        }
-
-        present(vc, animated: false)
     }
     
     @objc private func startMemorizeTapped() {
@@ -363,39 +443,30 @@ final class MemorizationViewController: BaseViewController {
         case .record:
             break
         case .done:
-//            presenter.saveTaskUpdate {[weak self] result in
-//                guard let self else { return }
-//                
-//                switch result {
-//                case .success(let response):
-//                    presenter.task = response
-//                    
-//                    if response.completedEndAyah == response.endAyah {
-//                        
-//                    } else {
-//                        presenter.viewState = .learn
-//                        setupConditionalView()
-//                        swipeView()
-//                    }
-//                case .failure(let error):
-//                    print("Error: \(error)")
-//                }
-//            }
-            
-            let vc = TaskCompletedViewController()
-
-            vc.modalPresentationStyle = .overCurrentContext
-            vc.modalTransitionStyle = .crossDissolve
-
-            vc.onContinue = {
-                print("Generate task berikutnya")
+            presenter.saveTaskUpdate(taskCompleted: (stepIndex + 1)) {[weak self] result in
+                guard let self else { return }
+                
+                switch result {
+                case .success(let response):
+                    if response.lastCompletedAyah == response.endAyah {
+                        presenter.task = response
+                        present(alertCompleted, animated: false)
+                    } else {
+                        presenter.viewState = .learn
+                        setupConditionalView()
+                        
+                        if let completedEndAyah = presenter.task.completedEndAyah,
+                            stepIndex == completedEndAyah {
+                            presenter.task = response
+                            swipeView()
+                        } else {
+                            presenter.task = response
+                        }
+                    }
+                case .failure(let error):
+                    print("Error: \(error)")
+                }
             }
-
-            vc.onFinish = {
-                print("Kembali ke dashboard")
-            }
-
-            present(vc, animated: false)
         }
     }
     

@@ -114,7 +114,7 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         case .notStart:
             rightButton.updateTitle("Mulai")
         case .inProgress:
-            rightButton.updateTitle("Lanjutkan")
+            rightButton.updateTitle("Lanjut")
         case .done:
             rightButton.updateTitle("Lihat")
         default:

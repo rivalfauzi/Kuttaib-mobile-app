@@ -12,6 +12,7 @@ enum RepositoryError: LocalizedError {
     case activeTargetNotFound
     case updateFailed
     case dataNotFound
+    case lastAyat
 
     var errorDescription: String? {
         switch self {
@@ -23,6 +24,8 @@ enum RepositoryError: LocalizedError {
             return "Gagal mengupdate data"
         case .dataNotFound:
             return "Data tidak ditemukan"
+        case .lastAyat:
+            return "Sudah mencapai ayat terakhir"
         }
     }
 }

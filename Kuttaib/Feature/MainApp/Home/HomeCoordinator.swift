@@ -28,7 +28,7 @@ final class HomeCoordinator {
     func navigateTo(_ navigate: Navigate) {
         switch navigate {
         case .MemorizationSession(let task, let surah):
-            let presenter = MemorizationPresenter(task: task, surah: surah)
+            let presenter = MemorizationPresenter(task: task, surah: surah, navigation: navigationController)
             let vc = MemorizationViewController(presenter: presenter)
             vc.hidesBottomBarWhenPushed = true
             

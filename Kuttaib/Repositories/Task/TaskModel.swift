@@ -16,4 +16,12 @@ struct TaskModel {
     var completedEndAyah: Int?
     var type: TaskType?
     var taskDate: Date?
+    
+    var lastCompletedAyah: Int? {
+        guard let startAyah, let completedEndAyah else {
+            return nil
+        }
+        
+        return startAyah + completedEndAyah - 1
+    }
 }

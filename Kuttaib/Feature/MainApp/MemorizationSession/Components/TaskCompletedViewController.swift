@@ -34,28 +34,15 @@ final class TaskCompletedViewController: UIViewController {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Seluruh ayat pada tugas ini berhasil diselesaikan. Mau tambah ayat lagi?"
+        label.text = "Seluruh target hafalan telah diselesaikan. Lanjut ke ayat berikutnya?"
         label.numberOfLines = 0
         label.textAlignment = .center
         label.textColor = .secondaryLabel
         return label
     }()
-    
-    private let countTitle = UILabel()
-    private let countDesc = UILabel()
-    private let minusButton = UIButton(type: .system)
-    private let plusButton = UIButton(type: .system)
-    
-    private let countLabel = UILabel()
 
-    private let continueButton = PrimaryButton(title: "Tambah Ayat")
+    private let continueButton = PrimaryButton(title: "Lanjut ke Ayat Berikutnya")
     private let finishButton = UIButton()
-    
-    private var ayahCount = 3 {
-        didSet {
-            countLabel.text = "\(ayahCount)"
-        }
-    }
 
     override func viewDidLoad() {
         super.viewDidLoad()

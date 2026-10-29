@@ -49,6 +49,7 @@ enum TaskRepository {
                 task.type = data.type?.rawValue
                 task.taskDate = data.taskDate
                 task.target = activeTarget
+                task.target?.completedVerseCount = Int16(data.completedEndAyah ?? -1)
 
                 try context.save()
 
@@ -80,6 +81,10 @@ enum TaskRepository {
         do {
             if let task = try context.fetch(request).first {
                 if let completedEndAyah = data.completedEndAyah {
+                    if completedEndAyah > task.completedEndAyah {
+                        task.target?.completedVerseCount += 1
+                    }
+                    
                     task.completedEndAyah = Int16(completedEndAyah)
                 }
                 
@@ -92,6 +97,7 @@ enum TaskRepository {
                 }
                 
                 try context.save()
+                callback(.success(task.toModel()))
             } else {
                 callback(.failure(RepositoryError.dataNotFound))
             }

@@ -33,6 +33,10 @@ final class HomeViewController: BaseViewController {
         setup()
         setupListener()
         setupAction()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         presenter.initialService()
     }
     
@@ -237,10 +241,10 @@ final class HomeHeroCard: UIView {
         targetLabel.text = "\(data.targetType?.rawValue.capitalized ?? "") \(data.targetNumber ?? 0)"
         descLabel.text = "\(completedVerseCount)/\(totalVerseCount) ayat"
         
-        let percentage = completedVerseCount / totalVerseCount
-        let percentageText = "\(percentage * 100)%"
+        let percentage = CGFloat(completedVerseCount) / CGFloat(totalVerseCount)
+        let percentageText = String(format: "%.1f%%", percentage * 100)
         
-        progressView.progress = CGFloat(completedVerseCount) / CGFloat(totalVerseCount)
+        progressView.progress = percentage
         progressLabel.text = percentageText
     }
 }
