@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class HomeViewController: BaseViewController {
     let presenter: HomePresenter
@@ -14,6 +15,8 @@ final class HomeViewController: BaseViewController {
     private let descLabel = UILabel()
     private let targetCard = HomeHeroCard()
     private let taskSection = TaskSection()
+    private let statisticSection = HomeStatisticsView()
+    private let recomenSection = HomeRecomendationView()
     
     private let mainVStack = UIStackView()
     private let contentView = UIView()
@@ -38,6 +41,9 @@ final class HomeViewController: BaseViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         presenter.initialService()
+        targetCard.showAnimatedGradientSkeleton()
+        taskSection.startLoading()
+        statisticSection.startLoading()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -59,18 +65,23 @@ final class HomeViewController: BaseViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         mainVStack.translatesAutoresizingMaskIntoConstraints = false
         
-        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.font = .systemFont(ofSize: 21, weight: .semibold)
         titleLabel.textColor = .black
         titleLabel.numberOfLines = 0
+        titleLabel.text = "Assalamu'alaikum"
         
         descLabel.font = .systemFont(ofSize: 14, weight: .regular)
         descLabel.textColor = .systemGray2
         descLabel.numberOfLines = 0
+        descLabel.text = "Semoga hari ini lebih dekat dengan Al-Qur'an"
         
-        [titleLabel, descLabel, targetCard, taskSection].forEach {
+        [titleLabel, descLabel, targetCard, taskSection, statisticSection, recomenSection].forEach {
+            $0.isSkeletonable = true
             $0.translatesAutoresizingMaskIntoConstraints = false
             mainVStack.addArrangedSubview($0)
         }
+        
+        targetCard.skeletonCornerRadius = 24
         
         mainVStack.axis = .vertical
         mainVStack.spacing = 24
@@ -111,7 +122,8 @@ final class HomeViewController: BaseViewController {
             case .success(let response):
                 presenter.userData = response
                 titleLabel.text = "Assalamu'alaikum \(response.name)"
-                descLabel.text = "Semoga hari ini lebih dekat dengan Al-Qur'an"
+                titleLabel.hideSkeleton()
+                descLabel.hideSkeleton()
             case .failure(let error):
                 print(error)
             }
@@ -122,9 +134,11 @@ final class HomeViewController: BaseViewController {
             
             switch result {
             case .success(let data):
-                guard let data else { return }
+                guard let data, let target = presenter.userData?.dailyVerseTarget else { return }
                 presenter.targetData = data
                 targetCard.setConfig(data)
+                targetCard.hideSkeleton()
+                statisticSection.setConfiguration(data.tasks ?? [], dailyTarget: target)
             case .failure(let error):
                 print(error)
             }
@@ -140,7 +154,10 @@ final class HomeViewController: BaseViewController {
     private func setupAction() {
         taskSection.onTappedButton = {[weak self] task, surah in
             guard let self else { return }
-            presenter.navigateTo(.MemorizationSession(task: task, surah: surah))
+            
+            if case .ziyadah = task.type {
+                presenter.navigateTo(.MemorizationSession(task: task, surah: surah))
+            }
         }
     }
 }
@@ -167,7 +184,7 @@ final class HomeHeroCard: UIView {
     }
     
     private func setup() {
-        layer.cornerRadius = 16
+        layer.cornerRadius = 24
         layer.borderWidth = 1
         layer.borderColor = UIColor.primaryGreen.cgColor
         backgroundColor = .white
@@ -177,7 +194,7 @@ final class HomeHeroCard: UIView {
         titleCard.textColor = .systemGray2
         titleCard.numberOfLines = 0
         
-        targetLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        targetLabel.font = .systemFont(ofSize: 24, weight: .bold)
         targetLabel.textColor = .black
         
         descLabel.font = .systemFont(ofSize: 14, weight: .regular)
@@ -249,7 +266,7 @@ final class HomeHeroCard: UIView {
     }
 }
 
-final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, SkeletonCollectionViewDataSource {
     
     let title = UILabel()
     let taskCollection: UICollectionView = {
@@ -275,13 +292,14 @@ final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataS
     private func setup() {
         title.text = "Tugas Hari Ini"
         title.textColor = .black
-        title.font = .systemFont(ofSize: 16, weight: .semibold)
+        title.font = .systemFont(ofSize: 18, weight: .semibold)
         
         taskCollection.delegate = self
         taskCollection.dataSource = self
         taskCollection.register(HomeTaskCollectionViewCell.self, forCellWithReuseIdentifier: HomeTaskCollectionViewCell.identifier)
         taskCollection.backgroundColor = .clear
         taskCollection.isScrollEnabled = false
+        taskCollection.isSkeletonable = true
         
         collectionHeightConstraint = taskCollection.heightAnchor.constraint(equalToConstant: 0)
         
@@ -302,10 +320,16 @@ final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataS
         ])
     }
     
+    func startLoading() {
+        collectionHeightConstraint.constant = 90
+        layoutIfNeeded()
+        taskCollection.showAnimatedGradientSkeleton()
+    }
+    
     func setDataTask(_ items: [TaskModel], surahData: [Quran.Surah.Response]?) {
         dataTask = items
         self.surahData = surahData
-        taskCollection.reloadData()
+        taskCollection.hideSkeleton(reloadDataAfter: true)
         taskCollection.layoutIfNeeded()
 
         collectionHeightConstraint.constant = taskCollection
@@ -336,6 +360,14 @@ final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataS
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return CGSize(width: collectionView.bounds.width, height: 90)
+    }
+    
+    func collectionSkeletonView(_ skeletonView: UICollectionView, cellIdentifierForItemAt indexPath: IndexPath) -> SkeletonView.ReusableCellIdentifier {
+        HomeTaskCollectionViewCell.identifier
+    }
+    
+    func collectionSkeletonView(_ skeletonView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        1
     }
 }
 

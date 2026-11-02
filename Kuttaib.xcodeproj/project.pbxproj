@@ -6,6 +6,10 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		950CEF07309891B30045B4FC /* SkeletonView in Frameworks */ = {isa = PBXBuildFile; productRef = 950CEF06309891B30045B4FC /* SkeletonView */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		95FB95BD307CB44F007DA44A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -64,6 +68,7 @@
 		95FB95A0307CB44C007DA44A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				950CEF07309891B30045B4FC /* SkeletonView in Frameworks */,
 			);
 		};
 		95FB95B9307CB44F007DA44A /* Frameworks */ = {
@@ -116,6 +121,9 @@
 				95FB95A5307CB44C007DA44A /* Kuttaib */,
 			);
 			name = Kuttaib;
+			packageProductDependencies = (
+				950CEF06309891B30045B4FC /* SkeletonView */,
+			);
 			productName = Kuttaib;
 			productReference = 95FB95A3307CB44C007DA44A /* Kuttaib.app */;
 			productType = "com.apple.product-type.application";
@@ -194,6 +202,9 @@
 			);
 			mainGroup = 95FB959A307CB44C007DA44A;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				950CEF05309891B30045B4FC /* XCRemoteSwiftPackageReference "SkeletonView" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 95FB95A4307CB44C007DA44A /* Products */;
 			projectDirPath = "";
@@ -563,6 +574,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		950CEF05309891B30045B4FC /* XCRemoteSwiftPackageReference "SkeletonView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Juanpe/SkeletonView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.31.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		950CEF06309891B30045B4FC /* SkeletonView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 950CEF05309891B30045B4FC /* XCRemoteSwiftPackageReference "SkeletonView" */;
+			productName = SkeletonView;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 95FB959B307CB44C007DA44A /* Project object */;
 	validationLevel = 1;

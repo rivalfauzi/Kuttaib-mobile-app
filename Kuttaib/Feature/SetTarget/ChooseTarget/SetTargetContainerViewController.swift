@@ -107,7 +107,7 @@ final class SetTargetContainerViewController: BaseViewController {
     private func setupAction() {
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
-        skipButton.addTarget(self, action: #selector(skipButtonTapped), for: .touchUpInside)
+//        skipButton.addTarget(self, action: #selector(skipButtonTapped), for: .touchUpInside)
         
         sheet.didSelect = { [weak self] index, type, name in
             guard let self else { return }
@@ -121,11 +121,11 @@ final class SetTargetContainerViewController: BaseViewController {
             return
         }
         
-        if stepIndex == 0 {
-            skipButton.isHidden = false
-        } else {
-            skipButton.isHidden = true
-        }
+//        if stepIndex == 0 {
+//            skipButton.isHidden = false
+//        } else {
+        skipButton.isHidden = true
+//        }
         
         if stepIndex == (presenter.targetData.count - 1) {
             nextButton.updateTitle("Hitung Target")
@@ -242,7 +242,7 @@ final class SetTargetContainerViewController: BaseViewController {
     }
     
     @objc private func skipButtonTapped() {
-        
+        presenter.navigate(.home)
     }
 }
 

@@ -26,14 +26,18 @@ final class HomePresenter {
         
         group.enter()
         UserRepository.fetchUser { [weak self] result in
-            self?.onFetchUserData?(result)
-            group.leave()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                self?.onFetchUserData?(result)
+                group.leave()
+            }
         }
         
         group.enter()
         TargetRepository.getActiveTarget { [weak self] result in
-            self?.onFetchTargetData?(result)
-            group.leave()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                self?.onFetchTargetData?(result)
+                group.leave()
+            }
         }
         
         
@@ -69,10 +73,13 @@ final class HomePresenter {
                 return
             }
             
-            let yesterDayTask = targetData.tasks?.first {
-                $0.taskDate.map { Calendar.current.isDateInYesterday($0) } ?? false &&
-                $0.type == .ziyadah
-            }
+            let lastTask = targetData.tasks?
+                .filter { $0.type == .ziyadah }
+                .sorted {
+                    ($0.taskDate ?? .distantPast) >
+                    ($1.taskDate ?? .distantPast)
+                }
+                .first
             
             var todayTask = targetData.tasks?.filter {
                 $0.taskDate.map {
@@ -84,20 +91,20 @@ final class HomePresenter {
                 [TaskType.ziyadah, TaskType.murojaah].forEach { type in
                     if case .ziyadah = type {
                         guard let task = self.setZiyadahTask(
-                            lastTask: yesterDayTask,
+                            lastTask: lastTask,
                             juzsData: juzData
                         ) else { return }
                         
                         todayTask.append(task)
                     } else if case .murojaah = type {
-                        guard let surahNo = yesterDayTask?.surahNumber, let start = yesterDayTask?.startAyah, let completed = yesterDayTask?.completedEndAyah else { return }
+                        guard let surahNo = lastTask?.surahNumber, let start = lastTask?.startAyah, let completed = lastTask?.completedEndAyah else { return }
                         
                         let task = TaskModel(
                             id: nil,
                             status: .notStart,
                             surahNumber: surahNo,
                             startAyah: start,
-                            endAyah: start + completed,
+                            endAyah: start + completed - 1,
                             completedEndAyah: 0,
                             type: type,
                             taskDate: Date()
@@ -109,18 +116,18 @@ final class HomePresenter {
             } else if todayTask.count == 1 {
                 if todayTask[0].type == .murojaah {
                     guard let task = self.setZiyadahTask(
-                        lastTask: yesterDayTask,
+                        lastTask: lastTask,
                         juzsData: juzData
                     ) else { return }
                     
                     todayTask.append(task)
                 } else {
-                    if let yesterDayTask {
+                    if let lastTask {
                         let task = TaskModel(
                             status: .notStart,
-                            surahNumber: yesterDayTask.surahNumber,
-                            startAyah: yesterDayTask.startAyah,
-                            endAyah: yesterDayTask.completedEndAyah,
+                            surahNumber: lastTask.surahNumber,
+                            startAyah: lastTask.startAyah,
+                            endAyah: lastTask.completedEndAyah,
                             completedEndAyah: 0,
                             type: .murojaah,
                             taskDate: Date()
@@ -194,7 +201,7 @@ final class HomePresenter {
             var startAyah = 1
             
             if let lastTask, let taskStart = lastTask.startAyah, let completeAyah = lastTask.completedEndAyah  {
-                startAyah = taskStart + completeAyah + 1
+                startAyah = taskStart + completeAyah
                 newTask.startAyah = startAyah
             } else {
                 newTask.startAyah = startAyah

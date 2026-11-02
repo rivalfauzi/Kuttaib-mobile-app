@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class HomeTaskCollectionViewCell: UICollectionViewCell {
     static let identifier = "HomeTaskCollectionViewCell"
@@ -31,7 +32,12 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
     }
     
     private func setup() {
-        contentView.layer.cornerRadius = 12
+        isSkeletonable = true
+        skeletonCornerRadius = 24
+        
+        contentView.isSkeletonable = true
+        contentView.skeletonCornerRadius = 24
+        contentView.layer.cornerRadius = 24
         contentView.layer.borderWidth = 1
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
         contentView.backgroundColor = .white
@@ -94,16 +100,16 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         switch item.type {
         case .ziyadah:
             title.text = "Ziyadah"
-            title.textColor = .systemBlue
-            backgroundIcon.backgroundColor = .systemBlue.withAlphaComponent(0.2)
+            title.textColor = .primaryBlue
+            backgroundIcon.backgroundColor = .backgroundBlue
             icon.image = UIImage(systemName: "book.fill")
-            icon.tintColor = .systemBlue
+            icon.tintColor = .primaryBlue
         case .murojaah:
             title.text = "Murajaah"
-            title.textColor = .systemGreen
-            backgroundIcon.backgroundColor = .systemGreen.withAlphaComponent(0.2)
+            title.textColor = .primaryGreen
+            backgroundIcon.backgroundColor = .backgroundGreen
             icon.image = UIImage(systemName: "arrow.clockwise")
-            icon.tintColor = .systemGreen
+            icon.tintColor = .primaryGreen
         default:
             break
         }
