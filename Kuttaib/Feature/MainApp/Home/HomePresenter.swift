@@ -26,18 +26,14 @@ final class HomePresenter {
         
         group.enter()
         UserRepository.fetchUser { [weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                self?.onFetchUserData?(result)
-                group.leave()
-            }
+            self?.onFetchUserData?(result)
+            group.leave()
         }
         
         group.enter()
         TargetRepository.getActiveTarget { [weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                self?.onFetchTargetData?(result)
-                group.leave()
-            }
+            self?.onFetchTargetData?(result)
+            group.leave()
         }
         
         
@@ -73,13 +69,17 @@ final class HomePresenter {
                 return
             }
             
-            let lastTask = targetData.tasks?
+            var lastTask = targetData.tasks?
                 .filter { $0.type == .ziyadah }
                 .sorted {
                     ($0.taskDate ?? .distantPast) >
                     ($1.taskDate ?? .distantPast)
                 }
                 .first
+            
+            if let task = lastTask, let lastTaskDate = task.taskDate, Calendar.current.isDateInToday(lastTaskDate) {
+                lastTask = nil
+            }
             
             var todayTask = targetData.tasks?.filter {
                 $0.taskDate.map {
@@ -123,11 +123,13 @@ final class HomePresenter {
                     todayTask.append(task)
                 } else {
                     if let lastTask {
+                        guard let start = lastTask.startAyah, let completed = lastTask.completedEndAyah else { return }
+                        
                         let task = TaskModel(
                             status: .notStart,
                             surahNumber: lastTask.surahNumber,
-                            startAyah: lastTask.startAyah,
-                            endAyah: lastTask.completedEndAyah,
+                            startAyah: start,
+                            endAyah: start + completed - 1,
                             completedEndAyah: 0,
                             type: .murojaah,
                             taskDate: Date()

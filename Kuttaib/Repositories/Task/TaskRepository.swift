@@ -49,7 +49,9 @@ enum TaskRepository {
                 task.type = data.type?.rawValue
                 task.taskDate = data.taskDate
                 task.target = activeTarget
-                task.target?.completedVerseCount = Int16(data.completedEndAyah ?? -1)
+                
+                let completedVerseCount = task.target?.completedVerseCount ?? 0
+                task.target?.completedVerseCount = completedVerseCount + 1
 
                 try context.save()
 

@@ -115,8 +115,7 @@ extension HomeRecomendationView: UICollectionViewDelegate, UICollectionViewDataS
 final class HomeRecomendationCell: UICollectionViewCell {
     static let identifier = "HomeRecomendationCell"
     
-    private let icon = UIImageView()
-    private let backgroundIcon = UIView()
+    private let icon = UIIconView()
     private let title = UILabel()
     private let topHStack = UIStackView()
     private let desc = UILabel()
@@ -137,8 +136,6 @@ final class HomeRecomendationCell: UICollectionViewCell {
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
         contentView.backgroundColor = .white
         
-        backgroundIcon.layer.cornerRadius = 12
-        backgroundIcon.addSubview(icon)
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.contentMode = .scaleAspectFit
         
@@ -146,7 +143,7 @@ final class HomeRecomendationCell: UICollectionViewCell {
         title.font = .systemFont(ofSize: 18, weight: .medium)
         title.textAlignment = .left
         
-        [backgroundIcon, title].forEach {
+        [icon, title].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             topHStack.addArrangedSubview($0)
         }
@@ -182,21 +179,16 @@ final class HomeRecomendationCell: UICollectionViewCell {
             mainButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
             mainButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24),
             
-            backgroundIcon.heightAnchor.constraint(equalToConstant: 32),
-            backgroundIcon.widthAnchor.constraint(equalToConstant: 32),
-            icon.topAnchor.constraint(equalTo: backgroundIcon.topAnchor, constant: 8),
-            icon.leadingAnchor.constraint(equalTo: backgroundIcon.leadingAnchor, constant: 8),
-            icon.trailingAnchor.constraint(equalTo: backgroundIcon.trailingAnchor, constant: -8),
-            icon.bottomAnchor.constraint(equalTo: backgroundIcon.bottomAnchor, constant: -8),
+            icon.heightAnchor.constraint(equalToConstant: 32),
+            icon.widthAnchor.constraint(equalToConstant: 32)
         ])
         
         mainButton.addTarget(self, action: #selector(mainButtonTapped), for: .touchUpInside)
     }
     
     func config(_ item: HomeRecomendationEntity) {
-        icon.image = UIImage(systemName: item.icon)
-        icon.tintColor = item.iconTintColor
-        backgroundIcon.backgroundColor = item.backgroundIcon
+        icon.configure(iconImage: UIImage(systemName: item.icon), iconTintColor: item.iconTintColor, background: item.backgroundIcon, cornerRadius: 8)
+        
         title.text = item.title
         desc.text = item.description
         mainButton.setTitle(item.buttonTitle, for: .normal)

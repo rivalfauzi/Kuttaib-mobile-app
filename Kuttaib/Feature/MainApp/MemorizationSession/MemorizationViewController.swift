@@ -448,7 +448,7 @@ final class MemorizationViewController: BaseViewController {
                 
                 switch result {
                 case .success(let response):
-                    if response.lastCompletedAyah == response.endAyah {
+                    if response.lastCompletedAyah == response.endAyah, (stepIndex + 1) == response.completedEndAyah {
                         presenter.task = response
                         present(alertCompleted, animated: false)
                     } else {

@@ -45,10 +45,10 @@ final class MemorizationPresenter {
         var updateTask = task
         updateTask.completedEndAyah = max(taskCompleted, (updateTask.completedEndAyah ?? 0))
         
-        if task.id != nil {
+        if updateTask.id != nil {
             TaskRepository.updateTask(data: updateTask, callback: callback)
         } else {
-            task.status = .inProgress
+            updateTask.status = .inProgress
             TaskRepository.createTask(data: updateTask, callback: callback)
         }
     }

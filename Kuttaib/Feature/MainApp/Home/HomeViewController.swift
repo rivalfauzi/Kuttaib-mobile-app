@@ -40,10 +40,10 @@ final class HomeViewController: BaseViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        presenter.initialService()
         targetCard.showAnimatedGradientSkeleton()
         taskSection.startLoading()
         statisticSection.startLoading()
+        presenter.initialService()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -186,7 +186,7 @@ final class HomeHeroCard: UIView {
     private func setup() {
         layer.cornerRadius = 24
         layer.borderWidth = 1
-        layer.borderColor = UIColor.primaryGreen.cgColor
+        layer.borderColor = UIColor.systemGray5.cgColor
         backgroundColor = .white
         
         titleCard.text = "Target Hafalan"

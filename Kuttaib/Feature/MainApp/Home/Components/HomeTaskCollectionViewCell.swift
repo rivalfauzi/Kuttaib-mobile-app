@@ -11,8 +11,7 @@ import SkeletonView
 final class HomeTaskCollectionViewCell: UICollectionViewCell {
     static let identifier = "HomeTaskCollectionViewCell"
     
-    private let backgroundIcon = UIView()
-    private let icon = UIImageView()
+    private let icon = UIIconView()
     private let title = UILabel()
     private let subtitle = UILabel()
     private let rightButton = PrimaryButton(title: "Mulai")
@@ -42,8 +41,6 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
         contentView.backgroundColor = .white
         
-        backgroundIcon.layer.cornerRadius = 12
-        backgroundIcon.addSubview(icon)
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.contentMode = .scaleAspectFit
         
@@ -64,7 +61,7 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         rightButton.layer.cornerRadius = 12
         rightButton.setHeight(44)
         
-        [backgroundIcon, centerVStack, rightButton].forEach {
+        [icon, centerVStack, rightButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             mainHStack.addArrangedSubview($0)
         }
@@ -78,12 +75,8 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(mainHStack)
         
         NSLayoutConstraint.activate([
-            backgroundIcon.heightAnchor.constraint(equalToConstant: 48),
-            backgroundIcon.widthAnchor.constraint(equalToConstant: 48),
-            icon.topAnchor.constraint(equalTo: backgroundIcon.topAnchor, constant: 8),
-            icon.leadingAnchor.constraint(equalTo: backgroundIcon.leadingAnchor, constant: 8),
-            icon.trailingAnchor.constraint(equalTo: backgroundIcon.trailingAnchor, constant: -8),
-            icon.bottomAnchor.constraint(equalTo: backgroundIcon.bottomAnchor, constant: -8),
+            icon.heightAnchor.constraint(equalToConstant: 48),
+            icon.widthAnchor.constraint(equalToConstant: 48),
             
             rightButton.widthAnchor.constraint(equalTo: rightButton.heightAnchor, multiplier: 1.8),
             
@@ -101,15 +94,13 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         case .ziyadah:
             title.text = "Ziyadah"
             title.textColor = .primaryBlue
-            backgroundIcon.backgroundColor = .backgroundBlue
-            icon.image = UIImage(systemName: "book.fill")
-            icon.tintColor = .primaryBlue
+            
+            icon.configure(iconImage: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, background: .backgroundBlue)
         case .murojaah:
             title.text = "Murajaah"
             title.textColor = .primaryGreen
-            backgroundIcon.backgroundColor = .backgroundGreen
-            icon.image = UIImage(systemName: "arrow.clockwise")
-            icon.tintColor = .primaryGreen
+            
+            icon.configure(iconImage: UIImage(systemName: "arrow.clockwise"), iconTintColor: .primaryGreen, background: .backgroundGreen)
         default:
             break
         }
@@ -119,10 +110,16 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         switch item.status {
         case .notStart:
             rightButton.updateTitle("Mulai")
+            contentView.backgroundColor = .white
+            contentView.layer.borderColor = UIColor.systemGray5.cgColor
         case .inProgress:
             rightButton.updateTitle("Lanjut")
+            contentView.backgroundColor = .white
+            contentView.layer.borderColor = UIColor.systemGray5.cgColor
         case .done:
             rightButton.updateTitle("Lihat")
+            contentView.backgroundColor = .backgroundGold
+            contentView.layer.borderColor = UIColor.primaryGold.cgColor
         default:
             break
         }

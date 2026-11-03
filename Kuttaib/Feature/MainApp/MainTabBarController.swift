@@ -56,9 +56,9 @@ final class MainTabBarController: UITabBarController {
         profileCoordinator.start()
         
         profileNav.tabBarItem = UITabBarItem(
-            title: "Profil",
-            image: UIImage(systemName: "person"),
-            selectedImage: UIImage(systemName: "person.fill")
+            title: "Pengaturan",
+            image: UIImage(systemName: "gearshape"),
+            selectedImage: UIImage(systemName: "gearshape.fill")
         )
 
         viewControllers = [

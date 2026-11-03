@@ -292,8 +292,7 @@ extension HomeStatisticsView: UICollectionViewDelegate, UICollectionViewDataSour
 }
 
 final class StatisticComponents: UIView {
-    private let icon = UIImageView()
-    private let backgroundIcon = UIView()
+    private let icon = UIIconView()
     
     private let value = UILabel()
     
@@ -311,8 +310,6 @@ final class StatisticComponents: UIView {
     }
     
     private func setup() {
-        backgroundIcon.layer.cornerRadius = 12
-        backgroundIcon.addSubview(icon)
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.contentMode = .scaleAspectFit
         
@@ -320,7 +317,7 @@ final class StatisticComponents: UIView {
         value.textColor = .black
         value.textAlignment = .left
         
-        [backgroundIcon, value].forEach {
+        [icon, value].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             topHStack.addArrangedSubview($0)
         }
@@ -354,12 +351,8 @@ final class StatisticComponents: UIView {
             mainVStack.trailingAnchor.constraint(equalTo: trailingAnchor),
             mainVStack.bottomAnchor.constraint(equalTo: bottomAnchor),
             
-            backgroundIcon.heightAnchor.constraint(equalToConstant: 32),
-            backgroundIcon.widthAnchor.constraint(equalToConstant: 32),
-            icon.topAnchor.constraint(equalTo: backgroundIcon.topAnchor, constant: 8),
-            icon.leadingAnchor.constraint(equalTo: backgroundIcon.leadingAnchor, constant: 8),
-            icon.trailingAnchor.constraint(equalTo: backgroundIcon.trailingAnchor, constant: -8),
-            icon.bottomAnchor.constraint(equalTo: backgroundIcon.bottomAnchor, constant: -8),
+            icon.heightAnchor.constraint(equalToConstant: 32),
+            icon.widthAnchor.constraint(equalToConstant: 32)
         ])
     }
     
@@ -367,9 +360,7 @@ final class StatisticComponents: UIView {
         value.text = item.title
         descComponent.text = item.description
         
-        icon.image = UIImage(systemName: item.icon)
-        icon.tintColor = item.iconTintColor
-        backgroundIcon.backgroundColor = item.backgroundIcon
+        icon.configure(iconImage: UIImage(systemName: item.icon), iconTintColor: item.iconTintColor, background: item.backgroundIcon, cornerRadius: 8)
     }
 }
 
@@ -461,7 +452,14 @@ final class WeeklyBarCell: UICollectionViewCell {
     func configure(_ item: WeeklyProgress) {
         dayLabel.text = item.day
         progressLabel.text = "\(item.count)"
-        currentRatio = item.maxCount > 0 ? CGFloat(item.count) / CGFloat(item.maxCount) : 0
+        
+        if item.count > item.maxCount {
+            barView.backgroundColor = .primaryGold
+            currentRatio = 1
+        } else {
+            barView.backgroundColor = .primaryGreen
+            currentRatio = item.maxCount > 0 ? CGFloat(item.count) / CGFloat(item.maxCount) : 0
+        }
         
         setNeedsLayout()
     }
