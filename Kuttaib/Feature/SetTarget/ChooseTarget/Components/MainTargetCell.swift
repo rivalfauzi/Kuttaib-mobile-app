@@ -13,8 +13,7 @@ final class MainTargetCell: UICollectionViewCell {
 
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
-    private let icon = UIImageView()
-    private let iconBackground = UIView()
+    private let icon = UIIconView()
     private let badge = UIView()
     private let badgeLabel = UILabel()
     
@@ -35,7 +34,7 @@ final class MainTargetCell: UICollectionViewCell {
     override func prepareForReuse() {
         titleLabel.text = nil
         subtitleLabel.text = nil
-        icon.image = nil
+        icon.icon.image = nil
         layer.borderColor = UIColor.systemGray5.cgColor
     }
     
@@ -44,12 +43,6 @@ final class MainTargetCell: UICollectionViewCell {
         layer.borderWidth = 1
         layer.borderColor = UIColor.systemGray5.cgColor
         backgroundColor = .white
-        
-        icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.tintColor = .primaryGreen
-        iconBackground.backgroundColor = .systemGray6
-        iconBackground.layer.cornerRadius = 8
-        iconBackground.addSubview(icon)
         
         badgeLabel.translatesAutoresizingMaskIntoConstraints = false
         badgeLabel.text = "Rekomendasi"
@@ -87,7 +80,7 @@ final class MainTargetCell: UICollectionViewCell {
         labelVStack.distribution = .fill
         labelVStack.alignment = .fill
         
-        [iconBackground, labelVStack].forEach {
+        [icon, labelVStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             mainHStack.addArrangedSubview($0)
         }
@@ -106,12 +99,8 @@ final class MainTargetCell: UICollectionViewCell {
             mainHStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             mainHStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
             
-            iconBackground.heightAnchor.constraint(equalToConstant: 48),
-            iconBackground.widthAnchor.constraint(equalToConstant: 48),
-            icon.heightAnchor.constraint(equalToConstant: 28),
-            icon.widthAnchor.constraint(equalToConstant: 28),
-            icon.centerYAnchor.constraint(equalTo: iconBackground.centerYAnchor),
-            icon.centerXAnchor.constraint(equalTo: iconBackground.centerXAnchor),
+            icon.heightAnchor.constraint(equalToConstant: 48),
+            icon.widthAnchor.constraint(equalToConstant: 48),
             
             badgeLabel.topAnchor.constraint(equalTo: badge.topAnchor, constant: 4),
             badgeLabel.leadingAnchor.constraint(equalTo: badge.leadingAnchor, constant: 8),
@@ -123,7 +112,7 @@ final class MainTargetCell: UICollectionViewCell {
     func setConfig(_ item: MainTargetEntity, isSelected: Bool = false) {
         titleLabel.text = item.title
         subtitleLabel.text = item.subtitle
-        icon.image = UIImage(systemName: item.icon)
+        icon.configure(iconImage: UIImage(systemName: item.icon), iconTintColor: item.iconTintColor ?? .primaryGreen, background: item.background ?? .systemGray6, cornerRadius: 8)
         badge.isHidden = !item.populer
         
         layer.borderColor = isSelected ? UIColor.primaryGreen.cgColor : UIColor.systemGray5.cgColor

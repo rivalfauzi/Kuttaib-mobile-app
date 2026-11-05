@@ -6,17 +6,26 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class ProfileTargetCard: UIView {
     private let title = UILabel()
     
     private let targetVStack = UIStackView()
     private let memorizationTarget = ProfileTargetTableCell()
-    private let separtor = UIView()
+    private let separator = UIView()
     private let dailyTime = ProfileTargetTableCell()
     private let separator2 = UIView()
     private let mainTarget = ProfileTargetTableCell()
     private let contentView = UIView()
+    
+    var onTargetTapped: ((TargetType) -> Void)?
+    
+    enum TargetType {
+        case memorization
+        case dailyTime
+        case target
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -28,6 +37,8 @@ final class ProfileTargetCard: UIView {
     }
     
     private func setup() {
+        isSkeletonable = true
+        
         title.text = "Target Hafalan"
         title.textColor = .black
         title.font = .systemFont(ofSize: 18, weight: .semibold)
@@ -37,11 +48,14 @@ final class ProfileTargetCard: UIView {
         contentView.layer.borderWidth = 1
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
         contentView.backgroundColor = .white
+        contentView.skeletonCornerRadius = 24
+        contentView.isSkeletonable = true
         
-        separtor.backgroundColor = .separator
+        separator.backgroundColor = .separator
         separator2.backgroundColor = .separator
         
-        [memorizationTarget, separtor, dailyTime, separator2, mainTarget].forEach {
+        [memorizationTarget, separator, dailyTime, separator2, mainTarget].forEach {
+            $0.isHidden = true
             $0.translatesAutoresizingMaskIntoConstraints = false
             targetVStack.addArrangedSubview($0)
         }
@@ -74,24 +88,54 @@ final class ProfileTargetCard: UIView {
             targetVStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             targetVStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -24),
             
-            separtor.heightAnchor.constraint(equalToConstant: 1),
+            separator.heightAnchor.constraint(equalToConstant: 1),
             separator2.heightAnchor.constraint(equalToConstant: 1),
         ])
         
-        memorizationTarget.configure(icon: UIImage(systemName: "target"), iconTintColor: .primaryGreen, iconBackground: .backgroundGreen, titleString: "Target Harian", subtitleString: "5 ayat perhari")
-        memorizationTarget.onTapped = {
-            print("memorization target tapped")
+        memorizationTarget.onTapped = {[weak self] in
+            self?.onTargetTapped?(.memorization)
         }
         
-        dailyTime.configure(icon: UIImage(systemName: "clock.fill"), iconTintColor: .primaryGold, iconBackground: .backgroundGold, titleString: "Waktu Belajar", subtitleString: "15 menit perhari")
-        dailyTime.onTapped = {
-            print("daily time target tapped")
+        dailyTime.onTapped = {[weak self] in
+            self?.onTargetTapped?(.dailyTime)
         }
         
-        mainTarget.configure(icon: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, iconBackground: .backgroundBlue, titleString: "Target Juz atau Surah", subtitleString: "Surah 78 (An-Naba)")
-        mainTarget.onTapped = {
-            print("main target tapped")
+        mainTarget.onTapped = {[weak self] in
+            self?.onTargetTapped?(.target)
         }
+    }
+    
+    func configure(subtitle: String, type: TargetType) {
+        switch type {
+        case .memorization:
+            memorizationTarget.isHidden = false
+            
+            memorizationTarget.configure(icon: UIImage(systemName: "target"), iconTintColor: .primaryGreen, iconBackground: .backgroundGreen, titleString: "Target Harian", subtitleString: subtitle)
+            
+        case .dailyTime:
+            separator.isHidden = false
+            dailyTime.isHidden = false
+            
+            dailyTime.configure(icon: UIImage(systemName: "clock.fill"), iconTintColor: .primaryGold, iconBackground: .backgroundGold, titleString: "Waktu Belajar", subtitleString: subtitle)
+            
+            if mainTarget.isHidden {
+                separator2.isHidden = true
+            } else {
+                separator2.isHidden = false
+            }
+        case .target:
+            if dailyTime.isHidden {
+                separator2.isHidden = true
+            } else {
+                separator2.isHidden = false
+            }
+            
+            mainTarget.isHidden = false
+            
+            mainTarget.configure(icon: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, iconBackground: .backgroundBlue, titleString: "Target Juz atau Surah", subtitleString: subtitle)
+        }
+        
+        
     }
 }
 

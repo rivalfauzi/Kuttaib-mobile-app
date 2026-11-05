@@ -57,67 +57,13 @@ final class SetTargetPresenter {
             title: "Berapa target harianmu?",
             subtitle: "Pilih jumlah ayat atau halaman yang ingin kamu hafal setiap hari.",
             type: .daily,
-            items: [
-                .init(
-                    title: "3 ayat",
-                    subtitle: "Santai dan konsisten",
-                    icon: "leaf.fill",
-                    populer: false,
-                    value: 3,
-                    type: SetTargetData.DailyTargetType.ayat.rawValue
-                ),
-                .init(
-                    title: "5 ayat",
-                    subtitle: "Seimbang dan efektif",
-                    icon: "tree.fill",
-                    populer: false,
-                    value: 5,
-                    type: SetTargetData.DailyTargetType.ayat.rawValue
-                ),
-                .init(
-                    title: "10 ayat",
-                    subtitle: "Untuk kamu yang lebih cepat",
-                    icon: "sparkles",
-                    populer: false,
-                    value: 10,
-                    type: SetTargetData.DailyTargetType.ayat.rawValue
-                )
-            ]
+            items: UserOptions.dailyVersesTarget
         ),
         .init(
             title: "Berapa waktu yang bisa kamu luangkan setiap hari?",
             subtitle: "Kami akan menyesuaikan tugas hafalan dengan waktu yang kamu piilh.",
             type: .time,
-            items: [
-                .init(
-                    title: "10 menit",
-                    subtitle: "Cukup untuk memulai",
-                    icon: "clock.fill",
-                    populer: false,
-                    value: 10
-                ),
-                .init(
-                    title: "15 menit",
-                    subtitle: "Pilihan yang seimbang",
-                    icon: "clock.fill",
-                    populer: false,
-                    value: 15
-                ),
-                .init(
-                    title: "30 menit",
-                    subtitle: "Untuk hasil lebih cepat",
-                    icon: "clock.fill",
-                    populer: false,
-                    value: 30
-                ),
-                .init(
-                    title: "60 menit",
-                    subtitle: "Jika kamu ingin lebih maksimal",
-                    icon: "clock.fill",
-                    populer: false,
-                    value: 60
-                )
-            ]
+            items: UserOptions.dailyTimeTarget
         )
     ]
     
@@ -149,7 +95,7 @@ final class SetTargetPresenter {
         var saveError: Error?
         
         group.enter()
-        let user = UserModel(name: "Penghafal", dailyVerseTarget: dailyTarget, dailyStudyTime: timeTarget)
+        let user = UserModel(name: "Penghafal", dailyVerseTarget: dailyTarget, dailyStudyTime: timeTarget, reminderEnabled: false)
         
         UserRepository.saveUser(data: user) { result in
             if case .failure(let error) = result {

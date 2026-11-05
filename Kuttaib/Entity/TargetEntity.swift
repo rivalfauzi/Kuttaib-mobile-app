@@ -5,7 +5,7 @@
 //  Created by mco on 12/10/26.
 //
 
-import Foundation
+import UIKit
 
 struct MainTargetEntity {
     let title: String
@@ -14,6 +14,8 @@ struct MainTargetEntity {
     let populer: Bool
     let value: Int
     var type: String?
+    var iconTintColor: UIColor?
+    var background: UIColor?
 }
 
 struct SetTargetEntity {

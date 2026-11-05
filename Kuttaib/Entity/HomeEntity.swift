@@ -33,6 +33,11 @@ struct HomeRecomendationEntity {
     var title: String
     var description: String
     var buttonTitle: String
+    var buttonKey: HomeRecomendationButtonKey
+}
+
+enum HomeRecomendationButtonKey {
+    case reminder
 }
 
 enum TaskType: String {

@@ -8,8 +8,8 @@
 import UIKit
 
 final class UIIconView: UIView {
-    private let icon = UIImageView()
-    private let backgroundIcon = UIView()
+    let icon = UIImageView()
+    let backgroundIcon = UIView()
     
     private var iconHeightConstraint: NSLayoutConstraint!
     

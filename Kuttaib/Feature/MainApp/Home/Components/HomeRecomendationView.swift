@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class HomeRecomendationView: UIView {
     private let title = UILabel()
@@ -25,6 +26,10 @@ final class HomeRecomendationView: UIView {
     
     private var collectionHeightConstraint: NSLayoutConstraint!
     
+    var onCellButtonTapped: ((HomeRecomendationButtonKey) -> Void)?
+    
+    private var recomendationData: [HomeRecomendationEntity] = []
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -35,6 +40,7 @@ final class HomeRecomendationView: UIView {
     }
     
     private func setup() {
+        isSkeletonable = true
         title.text = "Rekomendasi"
         title.textColor = .black
         title.font = .systemFont(ofSize: 18, weight: .semibold)
@@ -57,6 +63,8 @@ final class HomeRecomendationView: UIView {
         collectionView.delegate = self
         collectionView.dataSource = self
         collectionView.register(HomeRecomendationCell.self, forCellWithReuseIdentifier: HomeRecomendationCell.identifier)
+        collectionView.isSkeletonable = true
+        collectionView.showAnimatedGradientSkeleton()
         
         [titleHStack, collectionView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -81,26 +89,28 @@ final class HomeRecomendationView: UIView {
         rightButton.addTarget(self, action: #selector(rightButtonTapped), for: .touchUpInside)
     }
     
+    func setData(_ data: [HomeRecomendationEntity]) {
+        recomendationData = data
+        collectionView.hideSkeleton(reloadDataAfter: true)
+    }
+    
     @objc private func rightButtonTapped() {
         print("right button tapped")
     }
 }
 
-extension HomeRecomendationView: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+extension HomeRecomendationView: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, SkeletonCollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        2
+        recomendationData.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HomeRecomendationCell.identifier, for: indexPath) as! HomeRecomendationCell
-        cell.config(HomeRecomendationEntity(
-            icon: "book.fill",
-            iconTintColor: .primaryBlue,
-            backgroundIcon: .backgroundBlue,
-            title: "Atur Pengingat Hafalan",
-            description: "Pilih jam favoritmu supaya fokus hafalan tidak terlewat. Bisa diatur kapan saja di Profil.",
-            buttonTitle: "Atur di Profil")
-        )
+        let item = recomendationData[indexPath.item]
+        cell.config(item)
+        cell.onButtonTapped = {[weak self] in
+            self?.onCellButtonTapped?(item.buttonKey)
+        }
         
         return cell
     }
@@ -108,6 +118,14 @@ extension HomeRecomendationView: UICollectionViewDelegate, UICollectionViewDataS
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = UIScreen.main.bounds.width * 0.7
         return CGSize(width: width, height: collectionView.bounds.height)
+    }
+    
+    func collectionSkeletonView(_ skeletonView: UICollectionView, cellIdentifierForItemAt indexPath: IndexPath) -> SkeletonView.ReusableCellIdentifier {
+        HomeRecomendationCell.identifier
+    }
+    
+    func collectionSkeletonView(_ skeletonView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        2
     }
     
 }
@@ -121,6 +139,8 @@ final class HomeRecomendationCell: UICollectionViewCell {
     private let desc = UILabel()
     private let mainButton = UIButton()
     
+    var onButtonTapped: (() -> Void)?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -131,6 +151,9 @@ final class HomeRecomendationCell: UICollectionViewCell {
     }
     
     private func setup() {
+        isSkeletonable = true
+        skeletonCornerRadius = 24
+        contentView.isSkeletonable = true
         contentView.layer.cornerRadius = 24
         contentView.layer.borderWidth = 1
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
@@ -140,7 +163,8 @@ final class HomeRecomendationCell: UICollectionViewCell {
         icon.contentMode = .scaleAspectFit
         
         title.textColor = .black
-        title.font = .systemFont(ofSize: 18, weight: .medium)
+        title.font = .systemFont(ofSize: 16, weight: .medium)
+        title.numberOfLines = 0
         title.textAlignment = .left
         
         [icon, title].forEach {
@@ -158,7 +182,7 @@ final class HomeRecomendationCell: UICollectionViewCell {
         desc.textColor = .systemGray
         desc.textAlignment = .left
         
-        mainButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        mainButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         mainButton.setTitleColor(.primaryGreen, for: .normal)
         
         [topHStack, desc, mainButton].forEach {
@@ -195,6 +219,6 @@ final class HomeRecomendationCell: UICollectionViewCell {
     }
     
     @objc private func mainButtonTapped() {
-        print("mainButtonTapped")
+        onButtonTapped?()
     }
 }

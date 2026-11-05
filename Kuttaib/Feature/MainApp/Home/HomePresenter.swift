@@ -26,14 +26,18 @@ final class HomePresenter {
         
         group.enter()
         UserRepository.fetchUser { [weak self] result in
-            self?.onFetchUserData?(result)
-            group.leave()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self?.onFetchUserData?(result)
+                group.leave()
+            }
         }
         
         group.enter()
         TargetRepository.getActiveTarget { [weak self] result in
-            self?.onFetchTargetData?(result)
-            group.leave()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self?.onFetchTargetData?(result)
+                group.leave()
+            }
         }
         
         
@@ -69,17 +73,16 @@ final class HomePresenter {
                 return
             }
             
-            var lastTask = targetData.tasks?
-                .filter { $0.type == .ziyadah }
+            let lastTask = targetData.tasks?
+                .filter {
+                    $0.type == .ziyadah &&
+                    !Calendar.current.isDateInToday($0.taskDate ?? .distantPast)
+                }
                 .sorted {
                     ($0.taskDate ?? .distantPast) >
                     ($1.taskDate ?? .distantPast)
                 }
                 .first
-            
-            if let task = lastTask, let lastTaskDate = task.taskDate, Calendar.current.isDateInToday(lastTaskDate) {
-                lastTask = nil
-            }
             
             var todayTask = targetData.tasks?.filter {
                 $0.taskDate.map {

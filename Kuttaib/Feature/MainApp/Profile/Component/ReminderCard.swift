@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class ReminderCard: UIView {
     private let title = UILabel()
@@ -21,6 +22,8 @@ final class ReminderCard: UIView {
     private let timeContainer = TimeContainer()
     private let reminderDays = ReminderDaysView()
     
+    var onNeedNotificationPermission: (() -> Void)?
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setup()
@@ -31,6 +34,8 @@ final class ReminderCard: UIView {
     }
     
     private func setup() {
+        isSkeletonable = true
+        
         title.text = "Pengingat Hafalan"
         title.textColor = .black
         title.font = .systemFont(ofSize: 18, weight: .semibold)
@@ -72,6 +77,8 @@ final class ReminderCard: UIView {
         contentView.layer.borderWidth = 1
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
         contentView.backgroundColor = .white
+        contentView.skeletonCornerRadius = 24
+        contentView.isSkeletonable = true
         
         [title, contentView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -105,11 +112,14 @@ final class ReminderCard: UIView {
         }
         
         reminderSwitch.addTarget(self, action: #selector(switchValueChanged), for: .valueChanged)
-        updateReminderState(isEnabled: reminderSwitch.isOn)
     }
     
     @objc private func switchValueChanged() {
-        updateReminderState(isEnabled: reminderSwitch.isOn)
+        if reminderSwitch.isOn {
+            onNeedNotificationPermission?()
+        } else {
+            updateReminderState(isEnabled: false)
+        }
     }
     
     private func updateReminderState(isEnabled: Bool) {
@@ -118,6 +128,21 @@ final class ReminderCard: UIView {
 
         timeContainer.isUserInteractionEnabled = isEnabled
         reminderDays.isUserInteractionEnabled = isEnabled
+    }
+    
+    func configure(_ data: ReminderSetting) {
+        reminderSwitch.isOn = data.isEnabled
+        let time = String(format: "%02d:%02d", data.hour, data.minute)
+        timeContainer.configure(time)
+        
+        reminderDays.configure(days: data.selectedDays)
+        
+        updateReminderState(isEnabled: reminderSwitch.isOn)
+    }
+    
+    func updateSwitch(isOn: Bool) {
+        reminderSwitch.setOn(isOn, animated: true)
+        updateReminderState(isEnabled: isOn)
     }
 }
 
@@ -256,20 +281,9 @@ final class ReminderDaysView: UIView {
 
         Weekday.allCases.forEach { day in
             let button = DayButton()
-            button.configure(
-                day: day,
-                isSelected: selectedDays.contains(day)
-            )
-
-            button.addTarget(
-                self,
-                action: #selector(dayTapped(_:)),
-                for: .touchUpInside
-            )
-
-            button.heightAnchor.constraint(
-                equalToConstant: 42
-            ).isActive = true
+            button.configure(day: day, isSelected: selectedDays.contains(day))
+            button.addTarget(self, action: #selector(dayTapped(_:)), for: .touchUpInside)
+            button.heightAnchor.constraint(equalToConstant: 42).isActive = true
 
             stackView.addArrangedSubview(button)
         }
@@ -283,6 +297,24 @@ final class ReminderDaysView: UIView {
             selectedDays.insert(day)
         } else {
             selectedDays.remove(day)
+        }
+    }
+    
+    func configure(days: [Weekday]) {
+        let selectedWeekdays = Set(days)
+        selectedDays.removeAll()
+
+        stackView.arrangedSubviews.forEach {
+            guard let button = $0 as? DayButton,
+                  let day = button.day else {
+                return
+            }
+
+            let isSelected = selectedWeekdays.contains(day)
+            button.isSelected = isSelected
+            if isSelected {
+                selectedDays.insert(day)
+            }
         }
     }
 }
@@ -308,15 +340,11 @@ final class DayButton: UIButton {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(
-        day: Weekday,
-        isSelected: Bool
-    ) {
-
+    func configure(day: Weekday, isSelected: Bool) {
         self.day = day
         self.isSelected = isSelected
 
-        setTitle(day.rawValue, for: .normal)
+        setTitle(day.title, for: .normal)
 
         updateAppearance()
     }

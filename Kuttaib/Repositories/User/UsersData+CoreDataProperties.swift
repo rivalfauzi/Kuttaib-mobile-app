@@ -16,12 +16,14 @@ extension UsersData {
     @NSManaged public var name: String?
     @NSManaged public var dailyVerseTarget: Int16
     @NSManaged public var dailyStudyTime: Int16
+    @NSManaged public var reminderEnabled: Bool
     
     func toModel() -> UserModel {
         UserModel(
             name: name ?? "",
             dailyVerseTarget: Int(dailyVerseTarget),
-            dailyStudyTime: Int(dailyStudyTime)
+            dailyStudyTime: Int(dailyStudyTime),
+            reminderEnabled: reminderEnabled
         )
     }
 }

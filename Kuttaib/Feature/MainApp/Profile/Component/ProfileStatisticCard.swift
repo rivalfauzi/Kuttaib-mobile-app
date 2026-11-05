@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class ProfileStatisticCard: UIView {
     private let title = UILabel()
@@ -30,6 +31,8 @@ final class ProfileStatisticCard: UIView {
     }
     
     private func setup() {
+        isSkeletonable = true
+        
         title.text = "Perjalananmu"
         title.textColor = .black
         title.font = .systemFont(ofSize: 18, weight: .semibold)
@@ -64,10 +67,12 @@ final class ProfileStatisticCard: UIView {
         contentHStack.distribution = .equalSpacing
         contentHStack.translatesAutoresizingMaskIntoConstraints = false
         
+        contentView.isSkeletonable = true
+        contentView.skeletonCornerRadius = 24
+        contentView.backgroundColor = .white
         contentView.layer.cornerRadius = 24
         contentView.layer.borderWidth = 1
         contentView.layer.borderColor = UIColor.systemGray5.cgColor
-        contentView.backgroundColor = .white
         contentView.addSubview(contentHStack)
                 
         [titleHStack, contentView].forEach {
@@ -94,9 +99,19 @@ final class ProfileStatisticCard: UIView {
             separator2.widthAnchor.constraint(equalToConstant: 1)
         ])
         
-        totalAyahComponent.setConfig(title: "10", subtitle: "ayat", desc: "Total dihafal", icon: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, background: .backgroundBlue)
-        totalDaysComponent.setConfig(title: "4", subtitle: "hari", desc: "Total belajar", icon: UIImage(systemName: "chart.line.uptrend.xyaxis"), iconTintColor: .primaryGreen, background: .backgroundGreen)
-        strikeComponent.setConfig(title: "4", subtitle: "hari", desc: "Rekor Strike", icon: UIImage(systemName: "flame.fill"), iconTintColor: .primaryRed, background: .backgroundRed)
+        totalAyahComponent.setConfig(subtitle: "ayat", desc: "Total dihafal", icon: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, background: .backgroundBlue)
+        totalDaysComponent.setConfig(subtitle: "hari", desc: "Total belajar", icon: UIImage(systemName: "chart.line.uptrend.xyaxis"), iconTintColor: .primaryGreen, background: .backgroundGreen)
+        strikeComponent.setConfig(subtitle: "hari", desc: "Rekor Strike", icon: UIImage(systemName: "flame.fill"), iconTintColor: .primaryRed, background: .backgroundRed)
+    }
+    
+    func startLoading() {
+        contentView.showAnimatedGradientSkeleton()
+    }
+    
+    func configure(_ data: ProfileStatisticEntity) {
+        totalAyahComponent.setTitle("\(data.totalAyah)")
+        totalDaysComponent.setTitle("\(data.totalDays)")
+        strikeComponent.setTitle("\(data.longestStreak)")
     }
 }
 
@@ -133,7 +148,7 @@ final class ProfileStatisticComponents: UIView {
         }
         
         topHStack.axis = .horizontal
-        topHStack.spacing = 4
+        topHStack.spacing = 8
         topHStack.alignment = .fill
         topHStack.distribution = .fill
         
@@ -166,11 +181,14 @@ final class ProfileStatisticComponents: UIView {
         ])
     }
     
-    func setConfig(title: String, subtitle: String, desc: String, icon: UIImage?, iconTintColor: UIColor, background: UIColor) {
-        value.text = title
+    func setConfig(subtitle: String, desc: String, icon: UIImage?, iconTintColor: UIColor, background: UIColor) {
         descValue.text = subtitle
         descComponent.text = desc
         
         self.icon.configure(iconImage: icon, iconTintColor: iconTintColor, background: background, cornerRadius: 8)
+    }
+    
+    func setTitle(_ title: String) {
+        value.text = title
     }
 }

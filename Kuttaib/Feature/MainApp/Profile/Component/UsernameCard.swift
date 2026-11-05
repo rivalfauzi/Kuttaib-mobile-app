@@ -14,7 +14,6 @@ final class UsernameCard: UIView {
     private let desc = UILabel()
     private let centerVStack = UIStackView()
     private let changeButton = UIButton()
-    private let buttonViewContainer = UIView()
     private let mainHStack = UIStackView()
     
     var onTappedChangeButton: (()->Void)?
@@ -53,6 +52,7 @@ final class UsernameCard: UIView {
         desc.textColor = .systemGray2
         desc.numberOfLines = 0
         desc.textAlignment = .left
+        desc.text = "Nama Pengguna"
         
         [name, desc].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -62,7 +62,9 @@ final class UsernameCard: UIView {
         centerVStack.axis = .vertical
         centerVStack.spacing = 4
         centerVStack.alignment = .fill
-        centerVStack.distribution = .fillEqually
+        centerVStack.distribution = .fill
+        centerVStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        centerVStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
         
         changeButton.setTitle("Ubah", for: .normal)
         changeButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
@@ -72,17 +74,17 @@ final class UsernameCard: UIView {
         changeButton.layer.borderColor = UIColor.primaryGreen.cgColor
         changeButton.layer.cornerRadius = 20
         changeButton.translatesAutoresizingMaskIntoConstraints = false
+        changeButton.setContentHuggingPriority(.required, for: .horizontal)
+        changeButton.setContentCompressionResistancePriority(.required, for: .horizontal)
         
-        buttonViewContainer.addSubview(changeButton)
-        
-        [backgroundIcon, centerVStack, buttonViewContainer].forEach {
+        [backgroundIcon, centerVStack, changeButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             mainHStack.addArrangedSubview($0)
         }
         
         mainHStack.axis = .horizontal
         mainHStack.distribution = .fill
-        mainHStack.alignment = .fill
+        mainHStack.alignment = .center
         mainHStack.spacing = 16
         mainHStack.translatesAutoresizingMaskIntoConstraints = false
         
@@ -101,9 +103,7 @@ final class UsernameCard: UIView {
             initialLabel.centerYAnchor.constraint(equalTo: backgroundIcon.centerYAnchor),
             
             changeButton.heightAnchor.constraint(equalToConstant: 40),
-            changeButton.widthAnchor.constraint(equalToConstant: 89),
-            changeButton.centerXAnchor.constraint(equalTo: buttonViewContainer.centerXAnchor),
-            changeButton.centerYAnchor.constraint(equalTo: buttonViewContainer.centerYAnchor)
+            changeButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 80),
         ])
         
         changeButton.addTarget(self, action: #selector(onChangeButton), for: .touchUpInside)
@@ -114,7 +114,6 @@ final class UsernameCard: UIView {
         
         name.text = nameString
         initialLabel.text = initial
-        desc.text = "Bergabung 03 November 2026"
     }
     
     @objc private func onChangeButton() {

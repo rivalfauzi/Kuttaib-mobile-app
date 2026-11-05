@@ -8,7 +8,8 @@
 import Foundation
 
 struct UserModel {
-    let name: String
-    let dailyVerseTarget: Int
-    let dailyStudyTime: Int
+    var name: String
+    var dailyVerseTarget: Int
+    var dailyStudyTime: Int
+    var reminderEnabled: Bool
 }

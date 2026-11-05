@@ -22,6 +22,8 @@ final class HomeViewController: BaseViewController {
     private let contentView = UIView()
     private let scrollView = UIScrollView()
     
+    private var recomendationData: [HomeRecomendationEntity] = []
+    
     init(presenter: HomePresenter) {
         self.presenter = presenter
         super.init(nibName: nil, bundle: nil)
@@ -38,17 +40,14 @@ final class HomeViewController: BaseViewController {
         setupAction()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.isNavigationBarHidden = true
+        recomendationData = []
         targetCard.showAnimatedGradientSkeleton()
         taskSection.startLoading()
         statisticSection.startLoading()
         presenter.initialService()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.navigationController?.isNavigationBarHidden = true
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -121,6 +120,21 @@ final class HomeViewController: BaseViewController {
             switch result {
             case .success(let response):
                 presenter.userData = response
+                
+                if !response.reminderEnabled {
+                    recomendationData.append(
+                        HomeRecomendationEntity(
+                            icon: "book.fill",
+                            iconTintColor: .primaryBlue,
+                            backgroundIcon: .backgroundBlue,
+                            title: "Atur Pengingat Hafalan",
+                            description: "Pilih jam favoritmu supaya fokus hafalan tidak terlewat. Bisa diatur kapan saja di Profil.",
+                            buttonTitle: "Atur di Profil",
+                            buttonKey: .reminder
+                        )
+                    )
+                }
+                
                 titleLabel.text = "Assalamu'alaikum \(response.name)"
                 titleLabel.hideSkeleton()
                 descLabel.hideSkeleton()
@@ -148,6 +162,7 @@ final class HomeViewController: BaseViewController {
             guard let self else { return }
             
             self.taskSection.setDataTask(data, surahData: presenter.surahData)
+            self.recomenSection.setData(recomendationData)
         }
     }
     
@@ -157,6 +172,15 @@ final class HomeViewController: BaseViewController {
             
             if case .ziyadah = task.type {
                 presenter.navigateTo(.MemorizationSession(task: task, surah: surah))
+            }
+        }
+        
+        recomenSection.onCellButtonTapped = {[weak self] key in
+            guard let self else { return }
+            
+            switch key {
+            case .reminder:
+                print("Reminder")
             }
         }
     }

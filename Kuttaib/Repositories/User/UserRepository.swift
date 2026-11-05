@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 
 enum UserRepository {
-    static func saveUser(data: UserModel, callback: @escaping ((Result<Bool, Error>) -> Void)) {
+    static func saveUser(data: UserModel, callback: @escaping ((Result<UserModel, Error>) -> Void)) {
         let context = CoreDataManager.shared.context
         let request: NSFetchRequest<UsersData> = UsersData.fetchRequest()
         request.fetchLimit = 1
@@ -20,10 +20,11 @@ enum UserRepository {
             user.name = data.name
             user.dailyVerseTarget = Int16(data.dailyVerseTarget)
             user.dailyStudyTime = Int16(data.dailyStudyTime)
+            user.reminderEnabled = data.reminderEnabled
             
             try context.save()
             
-            callback(.success(true))
+            callback(.success(user.toModel()))
         } catch {
             callback(.failure(error))
         }
