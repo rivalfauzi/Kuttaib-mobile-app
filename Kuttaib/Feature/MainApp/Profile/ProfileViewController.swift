@@ -38,13 +38,12 @@ final class ProfileViewController: BaseViewController {
         setup()
         setupAction()
         listener()
-        
-        initService()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.navigationController?.isNavigationBarHidden = true
+        initService()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -130,6 +129,11 @@ final class ProfileViewController: BaseViewController {
                     subtitle: "Berapa ayat yang ingin kamu hafal setiap hari?",
                     type: .daily
                 )
+                
+                targetBottomSheet.modalPresentationStyle = .overFullScreen
+                targetBottomSheet.modalTransitionStyle = .crossDissolve
+                
+                present(targetBottomSheet, animated: false)
             case .dailyTime:
                 let userOptions = UserOptions.dailyTimeTarget
                 
@@ -140,15 +144,15 @@ final class ProfileViewController: BaseViewController {
                     subtitle: "Berapa waktu yang bisa kamu luangkan setiap hari?",
                     type: .time
                 )
+                
+                targetBottomSheet.modalPresentationStyle = .overFullScreen
+                targetBottomSheet.modalTransitionStyle = .crossDissolve
+                
+                present(targetBottomSheet, animated: false)
             case .target:
                 print("Target popup")
                 return
             }
-
-            targetBottomSheet.modalPresentationStyle = .overFullScreen
-            targetBottomSheet.modalTransitionStyle = .crossDissolve
-            
-            present(targetBottomSheet, animated: false)
         }
         
         reminderCard.onNeedNotificationPermission = {[weak self] in

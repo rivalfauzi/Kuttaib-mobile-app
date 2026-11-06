@@ -221,4 +221,8 @@ final class HomePresenter {
     func navigateTo(_ navigate: HomeCoordinator.Navigate) {
         coordinator.navigateTo(navigate)
     }
+    
+    func switchTabBar(_ tab: MainTabBarController.MainTab) {
+        coordinator.switchToTab(tab)
+    }
 }

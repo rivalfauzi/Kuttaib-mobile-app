@@ -10,6 +10,11 @@ import UIKit
 final class MainTabBarController: UITabBarController {
     let coordinator: MainAppCoordinator
     
+    enum MainTab: Int {
+        case home = 0
+        case profile = 1
+    }
+    
     init(coordinator: MainAppCoordinator) {
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
@@ -65,5 +70,9 @@ final class MainTabBarController: UITabBarController {
             homeNav,
             profileNav
         ]
+    }
+    
+    func switchToTab(_ tab: MainTab) {
+        selectedIndex = tab.rawValue
     }
 }

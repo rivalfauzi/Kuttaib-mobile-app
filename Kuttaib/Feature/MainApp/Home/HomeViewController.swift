@@ -47,6 +47,7 @@ final class HomeViewController: BaseViewController {
         targetCard.showAnimatedGradientSkeleton()
         taskSection.startLoading()
         statisticSection.startLoading()
+        recomenSection.showAnimatedGradientSkeleton()
         presenter.initialService()
     }
     
@@ -171,7 +172,7 @@ final class HomeViewController: BaseViewController {
             guard let self else { return }
             
             if case .ziyadah = task.type {
-                presenter.navigateTo(.MemorizationSession(task: task, surah: surah))
+                presenter.navigateTo(.memorizationSession(task: task, surah: surah))
             }
         }
         
@@ -180,8 +181,14 @@ final class HomeViewController: BaseViewController {
             
             switch key {
             case .reminder:
-                print("Reminder")
+                self.presenter.switchTabBar(.profile)
             }
+        }
+        
+        targetCard.onDetailTapped = {[weak self] in
+            guard let self, let data = presenter.targetData, let user = presenter.userData else { return }
+            
+            presenter.navigateTo(.targetDetail(data: data, user: user))
         }
     }
 }
@@ -197,6 +204,8 @@ final class HomeHeroCard: UIView {
     let progressLabel = UILabel()
     let rightView = UIView()
     let mainHStack = UIStackView()
+    
+    var onDetailTapped:(() -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -274,6 +283,8 @@ final class HomeHeroCard: UIView {
             progressLabel.centerXAnchor.constraint(equalTo: rightView.centerXAnchor),
             progressLabel.centerYAnchor.constraint(equalTo: rightView.centerYAnchor),
         ])
+        
+        detailButton.addTarget(self, action: #selector(onButtonTapped), for: .touchUpInside)
     }
     
     func setConfig(_ data: TargetModel) {
@@ -287,6 +298,10 @@ final class HomeHeroCard: UIView {
         
         progressView.progress = percentage
         progressLabel.text = percentageText
+    }
+    
+    @objc private func onButtonTapped() {
+        onDetailTapped?()
     }
 }
 

@@ -11,7 +11,8 @@ final class HomeCoordinator {
     let navigationController: UINavigationController
     
     enum Navigate {
-        case MemorizationSession(task: TaskModel, surah: Quran.Surah.Response?)
+        case memorizationSession(task: TaskModel, surah: Quran.Surah.Response?)
+        case targetDetail(data: TargetModel, user: UserModel)
     }
     
     init(navigationController: UINavigationController) {
@@ -27,12 +28,23 @@ final class HomeCoordinator {
     
     func navigateTo(_ navigate: Navigate) {
         switch navigate {
-        case .MemorizationSession(let task, let surah):
+        case .memorizationSession(let task, let surah):
             let presenter = MemorizationPresenter(task: task, surah: surah, navigation: navigationController)
             let vc = MemorizationViewController(presenter: presenter)
             vc.hidesBottomBarWhenPushed = true
             
             navigationController.pushViewController(vc, animated: true)
+        case .targetDetail(let data, let user):
+            let presenter = DetailTargetPresenter(navigation: navigationController, data: data, user: user)
+            let vc = DetailTargetViewController(presenter: presenter)
+            vc.hidesBottomBarWhenPushed = true
+            navigationController.pushViewController(vc, animated: true)
+        }
+    }
+    
+    func switchToTab(_ tab: MainTabBarController.MainTab) {
+        if let tabBar = navigationController.tabBarController as? MainTabBarController {
+            tabBar.switchToTab(tab)
         }
     }
 }

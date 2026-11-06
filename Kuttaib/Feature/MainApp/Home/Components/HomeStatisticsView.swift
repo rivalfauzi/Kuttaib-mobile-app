@@ -230,19 +230,20 @@ final class HomeStatisticsView: UIView {
         }
         
         var totalAyah: Int = 0
-        var median: Double = 0.0
+        var median = ""
         
         if !ziyadahTasks.isEmpty {
             totalAyah = ziyadahTasks.reduce(0) { result, task in
                 return result + (task.completedEndAyah ?? 0)
             }
             
-            median = Double(totalAyah) / Double(ziyadahTasks.count)
+            let doubleMedian = Double(totalAyah) / Double(ziyadahTasks.count)
+            median = String(format: "%.1f", doubleMedian)
         }
 
         totalAyahComponent.setConfig(HomeStatisticsEntity(title: "\(totalAyah)", description: "Ayat dihafal", icon: "book.fill", iconTintColor: .primaryBlue, backgroundIcon: .backgroundBlue))
         
-        averageComponent.setConfig(HomeStatisticsEntity(title: "\(median)", description: "Ayat per hari", icon: "chart.line.uptrend.xyaxis", iconTintColor: .primaryGreen, backgroundIcon: .backgroundGreen))
+        averageComponent.setConfig(HomeStatisticsEntity(title: median, description: "Ayat per hari", icon: "chart.line.uptrend.xyaxis", iconTintColor: .primaryGreen, backgroundIcon: .backgroundGreen))
     }
     
     private func setDefaultData(_ tasks: [TaskModel]) {
