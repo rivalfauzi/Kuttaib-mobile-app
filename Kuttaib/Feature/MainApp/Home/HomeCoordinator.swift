@@ -12,7 +12,7 @@ final class HomeCoordinator {
     
     enum Navigate {
         case memorizationSession(task: TaskModel, surah: Quran.Surah.Response?)
-        case targetDetail(data: TargetModel, user: UserModel)
+        case targetDetail(user: UserModel)
     }
     
     init(navigationController: UINavigationController) {
@@ -34,8 +34,10 @@ final class HomeCoordinator {
             vc.hidesBottomBarWhenPushed = true
             
             navigationController.pushViewController(vc, animated: true)
-        case .targetDetail(let data, let user):
-            let presenter = DetailTargetPresenter(navigation: navigationController, data: data, user: user)
+        case .targetDetail(let user):
+            let presenter = DetailTargetPresenter(navigation: navigationController, user: user)
+            presenter.router = self
+            
             let vc = DetailTargetViewController(presenter: presenter)
             vc.hidesBottomBarWhenPushed = true
             navigationController.pushViewController(vc, animated: true)
@@ -47,4 +49,12 @@ final class HomeCoordinator {
             tabBar.switchToTab(tab)
         }
     }
+}
+
+extension HomeCoordinator: DetailTargetRouting {
+    func openTask(task: TaskModel, surah: Quran.Surah.Response?) {
+        navigateTo(.memorizationSession(task: task, surah: surah))
+    }
+    
+    
 }

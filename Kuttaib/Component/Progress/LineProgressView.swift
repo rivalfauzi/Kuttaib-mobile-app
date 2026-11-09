@@ -33,10 +33,10 @@ final class LineProgressView: UIView {
     private func setupView() {
 
         trackView.backgroundColor = .systemGray5
-        trackView.layer.cornerRadius = 4
+        trackView.layer.cornerRadius = 5
 
         progressView.backgroundColor = .primaryGreen
-        progressView.layer.cornerRadius = 4
+        progressView.layer.cornerRadius = 5
 
         addSubview(trackView)
         trackView.addSubview(progressView)
@@ -50,7 +50,7 @@ final class LineProgressView: UIView {
             trackView.trailingAnchor.constraint(equalTo: trailingAnchor),
             trackView.bottomAnchor.constraint(equalTo: bottomAnchor),
 
-            trackView.heightAnchor.constraint(equalToConstant: 8),
+            trackView.heightAnchor.constraint(equalToConstant: 10),
 
             progressView.topAnchor.constraint(equalTo: trackView.topAnchor),
             progressView.leadingAnchor.constraint(equalTo: trackView.leadingAnchor),

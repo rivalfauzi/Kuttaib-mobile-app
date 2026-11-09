@@ -6,16 +6,22 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class DaftarAyatView: UIView {
 
-    let titleLabel = UILabel()
-    let contentView = UIView()
-    let tableView = UITableView(frame: .zero, style: .insetGrouped)
-    
+    private let titleLabel = UILabel()
+    private let cardView = UIView()
+    private let tableView = UITableView(frame: .zero, style: .plain)
+
     private var tableHeightConstraint: NSLayoutConstraint!
-    
+
     private var sections: [AyatSection] = []
+    private var flattenedItems: [AyatListItem] = []
+    
+    var onContinue: ((AyatItem) -> Void)?
+    
+    private var isLoading = false
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -25,7 +31,7 @@ final class DaftarAyatView: UIView {
     required init?(coder: NSCoder) {
         fatalError()
     }
-    
+
     override func layoutSubviews() {
         super.layoutSubviews()
         updateTableHeight()
@@ -34,181 +40,269 @@ final class DaftarAyatView: UIView {
     private func setupView() {
         titleLabel.text = "Daftar Ayat"
         titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
-        titleLabel.textColor = .black
-        
-        contentView.addSubview(tableView)
-        contentView.layer.cornerRadius = 24
-        contentView.layer.borderColor = UIColor.systemGray5.cgColor
-        contentView.layer.borderWidth = 1
-        contentView.backgroundColor = .white
-        
-        tableView.register(DetailAyahCell.self, forCellReuseIdentifier: DetailAyahCell.reuseIdentifier)
-        tableView.register(AyatSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: AyatSectionHeaderView.reuseIdentifier)
+
+        cardView.backgroundColor = .white
+        cardView.layer.cornerRadius = 24
+        cardView.layer.borderWidth = 1
+        cardView.layer.borderColor = UIColor.systemGray5.cgColor
+        cardView.isSkeletonable = true
+        cardView.skeletonCornerRadius = 24
 
         tableView.delegate = self
         tableView.dataSource = self
         tableView.isScrollEnabled = false
-        tableView.separatorStyle = .singleLine
-        tableView.showsVerticalScrollIndicator = false
-        tableView.backgroundColor = .clear
-        tableView.layer.cornerRadius = 24
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        
-        [titleLabel, contentView].forEach {
+        tableView.separatorInset = .zero
+
+        if #available(iOS 15.0, *) {
+            tableView.sectionHeaderTopPadding = 0
+        }
+
+        tableView.register(AyatHeaderCell.self, forCellReuseIdentifier: AyatHeaderCell.reuseIdentifier)
+        tableView.register(DetailAyahCell.self, forCellReuseIdentifier: DetailAyahCell.reuseIdentifier)
+
+        [titleLabel, cardView].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             addSubview($0)
         }
-        
+
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+
+        cardView.addSubview(tableView)
+
         tableHeightConstraint = tableView.heightAnchor.constraint(equalToConstant: 0)
 
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: topAnchor),
             titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor),
 
-            contentView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
-            contentView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            
-            tableView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            cardView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            cardView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            cardView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            cardView.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            tableView.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 12),
+            tableView.leadingAnchor.constraint(equalTo: cardView.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -12),
 
             tableHeightConstraint
         ])
     }
-    
-    private func updateTableHeight() {
-        tableView.layoutIfNeeded()
-        tableHeightConstraint.constant = tableView.contentSize.height
-    }
-    
-    func configure(_ data: [AyatSection]) {
-        sections = data
+
+    // MARK: Public
+    func configure(_ sections: [AyatSection]) {
+        isLoading = false
+        self.sections = sections
+        rebuildItems()
+        tableView.hideSkeleton()
         tableView.reloadData()
-        
+
         DispatchQueue.main.async {
             self.updateTableHeight()
         }
     }
+    
+    func startLoading() {
+        isLoading = true
+        tableHeightConstraint.constant = 300
+        layoutIfNeeded()
+        cardView.showAnimatedGradientSkeleton()
+    }
+
+    private func rebuildItems() {
+        flattenedItems.removeAll()
+        for section in sections {
+            flattenedItems.append(.header(section))
+
+            if section.isExpanded {
+                section.items.forEach {
+                    flattenedItems.append(.ayat($0))
+                }
+            }
+        }
+    }
+
+    private func updateTableHeight() {
+        guard !isLoading else { return }
+        
+        tableView.layoutIfNeeded()
+        tableHeightConstraint.constant = tableView.contentSize.height
+    }
+    
+    private func handleTap(_ item: AyatItem) {
+        switch item.status {
+        case .completed:
+            print(item.number)
+        case .current:
+            onContinue?(item)
+        default:
+            break
+        }
+    }
 }
 
-extension DaftarAyatView: UITableViewDataSource {
-
+// MARK: - UITableViewDataSource
+extension DaftarAyatView: UITableViewDataSource, UITableViewDelegate {
     func numberOfSections(in tableView: UITableView) -> Int {
-        sections.count
+        1
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard sections[section].isExpanded else { return 0 }
-        return sections[section].items.count
+        flattenedItems.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: DetailAyahCell.reuseIdentifier, for: indexPath) as! DetailAyahCell
+        let item = flattenedItems[indexPath.row]
+        
+        switch item {
+        case .header(let section):
+            let cell = tableView.dequeueReusableCell(withIdentifier: AyatHeaderCell.reuseIdentifier, for: indexPath) as! AyatHeaderCell
 
-        let item = sections[indexPath.section].items[indexPath.row]
-        cell.configure(item)
-        return cell
-    }
-}
+            cell.configure(
+                title: section.title,
+                subtitle: section.subtitle,
+                expanded: section.isExpanded
+            )
 
-extension DaftarAyatView: UITableViewDelegate {
+            cell.tapAction = { [weak self] in
+                guard let self else { return }
 
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let header = tableView.dequeueReusableHeaderFooterView(withIdentifier: AyatSectionHeaderView.reuseIdentifier) as! AyatSectionHeaderView
+                guard let index = self.sections.firstIndex(where: {
+                    $0.id == section.id
+                }) else { return }
 
-        let sectionData = sections[section]
+                self.sections[index].isExpanded.toggle()
+                self.rebuildItems()
+                self.tableView.reloadData()
 
-        header.configure(
-            title: sectionData.title,
-            subtitle: sectionData.subtitle,
-            expanded: sectionData.isExpanded
-        )
-
-        header.tapAction = { [weak self] in
-            guard let self else { return }
-
-            self.sections[section].isExpanded.toggle()
-            self.tableView.reloadSections(IndexSet(integer: section), with: .automatic)
-
-            DispatchQueue.main.async {
-                self.updateTableHeight()
+                DispatchQueue.main.async {
+                    self.updateTableHeight()
+                }
             }
+
+            return cell
+
+        case .ayat(let ayat):
+            let cell = tableView.dequeueReusableCell(withIdentifier: DetailAyahCell.reuseIdentifier, for: indexPath) as! DetailAyahCell
+            
+            cell.configure(ayat)
+
+            return cell
         }
-
-        return header
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard case let .ayat(ayat) = flattenedItems[indexPath.row], ayat.status != .upcoming, let cell = tableView.cellForRow(at: indexPath) else { return }
 
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        70
+        UIView.animate(
+            withDuration: 0.1,
+            animations: {
+                cell.transform = CGAffineTransform(
+                    scaleX: 0.97,
+                    y: 0.97
+                )
+            },
+            completion: {[weak self] _ in
+                UIView.animate(withDuration: 0.1) {
+                    cell.transform = .identity
+                }
+                
+                self?.handleTap(ayat)
+            }
+        )
     }
-
+    
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        70
+        guard indexPath.row < flattenedItems.count else {
+            return 70
+        }
+        
+        let item = flattenedItems[indexPath.row]
+
+        switch item {
+        case .header:
+            return 72
+        case .ayat:
+            return 70
+        }
     }
 }
 
-final class AyatSectionHeaderView: UITableViewHeaderFooterView {
-    
-    static let reuseIdentifier = "AyatSectionHeaderView"
-    
-    let titleLabel = UILabel()
-    let subtitleLabel = UILabel()
-    let chevronImageView = UIImageView()
-    
+// MARK: - Header Cell
+
+final class AyatHeaderCell: UITableViewCell {
+    static let reuseIdentifier = "AyatHeaderCell"
+
+    private let titleLabel = UILabel()
+    private let subtitleLabel = UILabel()
+    private let chevronImageView = UIImageView()
+
     var tapAction: (() -> Void)?
-    
-    override init(reuseIdentifier: String?) {
-        super.init(reuseIdentifier: reuseIdentifier)
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupView()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError()
     }
-    
+
     private func setupView() {
-        contentView.backgroundColor = .white
+        selectionStyle = .none
+
+        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+
+        subtitleLabel.font = .systemFont(ofSize: 14)
+        subtitleLabel.textColor = .systemGray2
+
+        chevronImageView.image = UIImage(systemName: "chevron.down")
+        chevronImageView.tintColor = .systemGray2
+
+        let leftStack = UIStackView(
+            arrangedSubviews: [
+                titleLabel,
+                subtitleLabel
+            ]
+        )
+
+        leftStack.axis = .vertical
+        leftStack.spacing = 4
+
+        let spacer = UIView()
+
+        let stack = UIStackView(
+            arrangedSubviews: [
+                leftStack,
+                spacer,
+                chevronImageView
+            ]
+        )
+
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        contentView.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
+            stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
+        ])
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(didTap))
         contentView.addGestureRecognizer(tap)
-        
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        
-        subtitleLabel.font = .systemFont(ofSize: 14)
-        subtitleLabel.textColor = .secondaryLabel
-        
-        chevronImageView.image = UIImage(systemName: "chevron.down")
-        
-        [titleLabel, subtitleLabel, chevronImageView].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        }
-        
-        NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
-            subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            subtitleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
-            
-            chevronImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            chevronImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16)
-        ])
     }
-    
+
     func configure(title: String, subtitle: String, expanded: Bool) {
         titleLabel.text = title
         subtitleLabel.text = subtitle
-        
-        UIView.animate(withDuration: 0.2) {
-            self.chevronImageView.transform = expanded ? CGAffineTransform(rotationAngle: .pi) : .identity
-        }
+
+        chevronImageView.transform = expanded ? CGAffineTransform(rotationAngle: .pi) : .identity
     }
-    
+
     @objc private func didTap() {
         tapAction?()
     }
@@ -218,12 +312,13 @@ final class DetailAyahCell: UITableViewCell {
     
     static let reuseIdentifier = "AyatCell"
     
+    private let badgeContainer = UIView()
     private let badgeLabel = UILabel()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
-    
-    private let playButton = UIButton(type: .system)
-    private let nextButton = UIButton(type: .system)
+    private let centerVStack = UIStackView()
+    private let rightIcon = UIIconView()
+    private let mainHStack = UIStackView()
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -234,86 +329,138 @@ final class DetailAyahCell: UITableViewCell {
         fatalError()
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        badgeLabel.text = nil
+        titleLabel.text = nil
+        subtitleLabel.text = nil
+        
+        resetUI()
+    }
+    
     private func setupView() {
-        let badgeContainer = UIView()
-        badgeContainer.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
-        badgeContainer.layer.cornerRadius = 14
+        selectionStyle = .none
         
         badgeLabel.font = .systemFont(ofSize: 16, weight: .bold)
         badgeLabel.textAlignment = .center
-        
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        
-        subtitleLabel.font = .systemFont(ofSize: 14)
-        subtitleLabel.textColor = .secondaryLabel
-        
-        playButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
-        
-        nextButton.setTitle("Berikutnya", for: .normal)
-        nextButton.backgroundColor = .systemGreen
-        nextButton.tintColor = .white
-        nextButton.layer.cornerRadius = 14
-        
-        let textStack = UIStackView(
-            arrangedSubviews: [
-                titleLabel,
-                subtitleLabel
-            ]
-        )
-        
-        textStack.axis = .vertical
-        
-        [badgeContainer, textStack, playButton, nextButton].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            contentView.addSubview($0)
-        }
-        
-        badgeContainer.addSubview(badgeLabel)
+        badgeLabel.textColor = .primaryGreen
         badgeLabel.translatesAutoresizingMaskIntoConstraints = false
         
+        badgeContainer.backgroundColor = .backgroundGreen
+        badgeContainer.layer.cornerRadius = 12
+        badgeContainer.addSubview(badgeLabel)
+        
+        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.textColor = .black
+        
+        subtitleLabel.font = .systemFont(ofSize: 14)
+        subtitleLabel.textColor = .systemGray2
+        
+        [titleLabel, subtitleLabel].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            centerVStack.addArrangedSubview($0)
+        }
+        
+        centerVStack.axis = .vertical
+        centerVStack.spacing = 4
+        centerVStack.alignment = .fill
+        centerVStack.distribution = .fill
+        
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        
+        [badgeContainer, centerVStack, spacer, rightIcon].forEach {
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            mainHStack.addArrangedSubview($0)
+        }
+        
+        mainHStack.axis = .horizontal
+        mainHStack.spacing = 16
+        mainHStack.alignment = .center
+        mainHStack.distribution = .fill
+        mainHStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        contentView.addSubview(mainHStack)
+        
         NSLayoutConstraint.activate([
-            badgeContainer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            badgeContainer.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            badgeContainer.widthAnchor.constraint(equalToConstant: 40),
-            badgeContainer.heightAnchor.constraint(equalToConstant: 40),
-            
             badgeLabel.centerXAnchor.constraint(equalTo: badgeContainer.centerXAnchor),
             badgeLabel.centerYAnchor.constraint(equalTo: badgeContainer.centerYAnchor),
             
-            textStack.leadingAnchor.constraint(equalTo: badgeContainer.trailingAnchor, constant: 12),
-            textStack.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            badgeContainer.heightAnchor.constraint(equalToConstant: 44),
+            badgeContainer.widthAnchor.constraint(equalToConstant: 44),
             
-            playButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            playButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            mainHStack.topAnchor.constraint(equalTo: contentView.topAnchor),
+            mainHStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            mainHStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
+            mainHStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
-            nextButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            nextButton.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            nextButton.widthAnchor.constraint(equalToConstant: 90),
-            nextButton.heightAnchor.constraint(equalToConstant: 28),
-            
-            contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 62)
+            rightIcon.heightAnchor.constraint(equalToConstant: 40),
+            rightIcon.widthAnchor.constraint(equalToConstant: 40),
         ])
     }
     
     func configure(_ item: AyatItem) {
         
-        badgeLabel.text = "\(item.number)"
-        titleLabel.text = item.title
-        subtitleLabel.text = item.subtitle
+        resetUI()
         
-        playButton.isHidden = true
-        nextButton.isHidden = true
+        badgeLabel.text = "\(item.number)"
         
         switch item.status {
             
         case .completed:
-            playButton.isHidden = false
+            rightIcon.configure(iconImage: UIImage(systemName: "arrow.clockwise"), iconTintColor: .primaryGreen, background: .backgroundGreen, ratio: 0.5, cornerRadius: 20)
+            titleLabel.text = "Dihafal"
             
-        case .today:
-            nextButton.isHidden = false
+            if let repetition = item.repetition, repetition != 0 {
+                subtitleLabel.text = "Diulang \(repetition)x"
+            } else {
+                subtitleLabel.text = "Belum diulang"
+            }
             
+        case .current:
+            rightIcon.configure(iconImage: UIImage(systemName: "play.fill"), iconTintColor: .white, background: .primaryGreen, ratio: 0.5, cornerRadius: 20)
+            
+            contentView.backgroundColor = .backgroundGreen.withAlphaComponent(0.3)
+            badgeContainer.backgroundColor = .primaryGreen
+            badgeLabel.textColor = .white
+            titleLabel.text = "Lanjutkan"
+            var subtitleString = ""
+            
+            if let isToday = item.isToday, isToday {
+                subtitleString = "Hari ini • "
+            }
+            
+            subtitleString += "Hafalan selanjutnya"
+            
+            subtitleLabel.text = subtitleString
         case .upcoming:
-            break
+            rightIcon.configure(iconImage: UIImage(systemName: "clock.badge.checkmark"), iconTintColor: .systemGray, background: .systemGray5)
+            
+            badgeLabel.textColor = .systemGray
+            badgeContainer.backgroundColor = .systemGray5
+            contentView.alpha = 0.5
+            titleLabel.text = "Belum dihafal"
+            
+            if let isToday = item.isToday, isToday {
+                subtitleLabel.text = "Hari ini"
+            }
+            
         }
+    }
+    
+    private func resetUI() {
+        contentView.backgroundColor = .clear
+        contentView.alpha = 1
+
+        badgeContainer.backgroundColor = .backgroundGreen
+
+        badgeLabel.textColor = .primaryGreen
+
+        rightIcon.configure(
+            iconImage: nil,
+            iconTintColor: .clear,
+            background: .clear
+        )
     }
 }

@@ -150,7 +150,6 @@ final class DetailHeaderCard: UIView {
             mainVStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
             
             separator.heightAnchor.constraint(equalToConstant: 1),
-            progressBar.heightAnchor.constraint(equalToConstant: 12),
         ])
     }
     

@@ -186,9 +186,9 @@ final class HomeViewController: BaseViewController {
         }
         
         targetCard.onDetailTapped = {[weak self] in
-            guard let self, let data = presenter.targetData, let user = presenter.userData else { return }
+            guard let self, let user = presenter.userData else { return }
             
-            presenter.navigateTo(.targetDetail(data: data, user: user))
+            presenter.navigateTo(.targetDetail(user: user))
         }
     }
 }

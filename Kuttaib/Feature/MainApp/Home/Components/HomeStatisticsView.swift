@@ -230,7 +230,7 @@ final class HomeStatisticsView: UIView {
         }
         
         var totalAyah: Int = 0
-        var median = ""
+        var median = "0.0"
         
         if !ziyadahTasks.isEmpty {
             totalAyah = ziyadahTasks.reduce(0) { result, task in

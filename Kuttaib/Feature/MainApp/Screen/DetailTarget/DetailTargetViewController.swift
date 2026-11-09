@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SkeletonView
 
 final class DetailTargetViewController: BaseViewController {
     private let presenter: DetailTargetPresenter
@@ -30,6 +31,11 @@ final class DetailTargetViewController: BaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setup()
+        setupAction()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         setupService()
     }
     
@@ -41,6 +47,10 @@ final class DetailTargetViewController: BaseViewController {
             mainVStack.addArrangedSubview($0)
         }
         
+        headerView.isSkeletonable = true
+        headerView.skeletonCornerRadius = 24
+        
+        mainVStack.isSkeletonable = true
         mainVStack.axis = .vertical
         mainVStack.spacing = 24
         mainVStack.alignment = .fill
@@ -81,98 +91,40 @@ final class DetailTargetViewController: BaseViewController {
             mainButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
         ])
         
-        ayahListView.configure([
-            AyatSection(
-                title: "Ayat 1 - 10",
-                subtitle: "10/10 dihafal",
-                isExpanded: false,
-                items: []
-            ),
-
-            AyatSection(
-                title: "Ayat 11 - 20",
-                subtitle: "10/10 dihafal",
-                isExpanded: false,
-                items: []
-            ),
-
-            AyatSection(
-                title: "Ayat 21 - 30",
-                subtitle: "6/10 dihafal · 4 dalam tugas hari ini",
-                isExpanded: true,
-                items: [
-
-                    AyatItem(
-                        number: 21,
-                        title: "Dihafal",
-                        subtitle: "Diulang 1x",
-                        status: .completed
-                    ),
-
-                    AyatItem(
-                        number: 22,
-                        title: "Dihafal",
-                        subtitle: "Hari ini · Belum diulang",
-                        status: .completed
-                    ),
-
-                    AyatItem(
-                        number: 23,
-                        title: "Dihafal",
-                        subtitle: "Hari ini · Belum diulang",
-                        status: .completed
-                    ),
-
-                    AyatItem(
-                        number: 27,
-                        title: "Belum dihafal",
-                        subtitle: "Tugas hari ini",
-                        status: .today
-                    ),
-
-                    AyatItem(
-                        number: 28,
-                        title: "Belum dihafal",
-                        subtitle: "Tugas hari ini",
-                        status: .upcoming
-                    )
-                ]
-            ),
-
-            AyatSection(
-                title: "Ayat 31 - 40",
-                subtitle: "0/10 dihafal · 1 dalam tugas hari ini",
-                isExpanded: false,
-                items: []
-            )
-        ])
+        mainButton.addTarget(self, action: #selector(onMainButtonTapped), for: .touchUpInside)
     }
     
     private func setupService() {
-        switch presenter.targetData.targetType {
-        case .surah:
-            presenter.fetchSurahData {[weak self] result in
-                guard let self else { return }
+        headerView.showAnimatedGradientSkeleton()
+        ayahListView.startLoading()
+        presenter.fetchData()
+    }
+    
+    private func setupAction() {
+        presenter.onGetData = {[weak self] in
+            guard let self, let targetData = presenter.targetData, let totalVerseCount = targetData.totalVerseCount, let completedVerseCount = targetData.completedVerseCount else { return }
+            
+            switch targetData.targetType {
+            case .surah:
+                guard let surahData = presenter.surahData else { return }
                 
-                let targetNumber = presenter.targetData.targetNumber
-                
-                switch result {
-                case .success(let response):
-                    let targetSurahData = response.first {
-                        $0.number == targetNumber
-                    }
-                    
-                    guard let targetSurahData else { return }
-                    
-                    presenter.surahData = targetSurahData
-                    headerView.configure(targetSurahData, target: presenter.targetData, user: presenter.userData)
-                case .failure(let error):
-                    print("Error: \(error)")
-                }
+                headerView.configure(surahData, target: targetData, user: presenter.userData)
+                headerView.hideSkeleton()
+            default:
+                break
             }
             
-        default:
-            break
+            let dataItems = presenter.generateSections(totalVerseCount: totalVerseCount, completedVerseCount: completedVerseCount, tasks: targetData.tasks ?? [])
+            ayahListView.configure(dataItems)
+            ayahListView.hideSkeleton()
         }
+        
+        ayahListView.onContinue = {[weak self] item in
+            self?.onMainButtonTapped()
+        }
+    }
+    
+    @objc private func onMainButtonTapped() {
+        presenter.navigateTo(.ziyadahTask)
     }
 }
