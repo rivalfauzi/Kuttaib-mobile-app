@@ -12,7 +12,6 @@ protocol DetailTargetRouting: AnyObject {
 }
 
 final class DetailTargetPresenter {
-    let navigation: UINavigationController
     var targetData: TargetModel?
     var surahData: Quran.Surah.Response?
     var userData: UserModel
@@ -24,11 +23,10 @@ final class DetailTargetPresenter {
     
     enum Routing {
         case ziyadahTask
-        case murojaahTask
+        case murojaahTask(AyatItem)
     }
     
-    init(navigation: UINavigationController, user: UserModel) {
-        self.navigation = navigation
+    init(user: UserModel) {
         self.userData = user
     }
     
@@ -177,7 +175,7 @@ final class DetailTargetPresenter {
         let calendar = Calendar.current
 
         for task in tasks {
-            guard task.type == .ziyadah, let taskDate = task.taskDate, calendar.isDateInToday(taskDate), let start = task.startAyah, let end = task.endAyah else {
+            guard task.type == .ziyadah, let taskDate = task.taskDate, calendar.isDateInToday(taskDate), let start = task.startAyah, let end = task.endAyah, start <= end else {
                 continue
             }
 
@@ -223,8 +221,10 @@ final class DetailTargetPresenter {
             }
             
             router?.openTask(task: selectedTask, surah: surahData)
-        default:
-            break
+        case .murojaahTask(let item):
+            let generateTask = TaskModel(status: .notStart, surahNumber: surahData?.number, startAyah: item.number, endAyah: item.number, completedEndAyah: 0, type: .murojaah, taskDate: Date())
+            
+            router?.openTask(task: generateTask, surah: surahData)
         }
     }
     

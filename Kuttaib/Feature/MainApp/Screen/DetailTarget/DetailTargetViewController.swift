@@ -109,6 +109,11 @@ final class DetailTargetViewController: BaseViewController {
                 guard let surahData = presenter.surahData else { return }
                 
                 headerView.configure(surahData, target: targetData, user: presenter.userData)
+                
+                if targetData.completedVerseCount ?? 0 <= targetData.totalVerseCount ?? 0 {
+                    mainButton.isEnabled = false
+                }
+                
                 headerView.hideSkeleton()
             default:
                 break
@@ -120,7 +125,14 @@ final class DetailTargetViewController: BaseViewController {
         }
         
         ayahListView.onContinue = {[weak self] item in
-            self?.onMainButtonTapped()
+            switch item.status {
+            case .completed:
+                self?.presenter.navigateTo(.murojaahTask(item))
+            case .current:
+                self?.onMainButtonTapped()
+            default:
+                break
+            }
         }
     }
     

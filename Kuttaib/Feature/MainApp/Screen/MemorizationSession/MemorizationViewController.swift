@@ -204,7 +204,7 @@ final class MemorizationViewController: BaseViewController {
     
     private func setupNavigationTitle() {
         let titleLabel = UILabel()
-        titleLabel.text = presenter.task.type?.rawValue.capitalized
+        titleLabel.text = "Ziyadah"
         titleLabel.font = .boldSystemFont(ofSize: 18)
         titleLabel.textAlignment = .center
 
@@ -222,13 +222,6 @@ final class MemorizationViewController: BaseViewController {
         stackView.spacing = 4
 
         navigationItem.titleView = stackView
-        
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "bell"),
-            style: .plain,
-            target: self,
-            action: #selector(notificationTapped)
-        )
     }
     
     private func setupService() {
@@ -394,11 +387,6 @@ final class MemorizationViewController: BaseViewController {
                 print("Error: \(error)")
             }
         }
-    }
-    
-    
-    @objc private func notificationTapped() {
-        
     }
     
     @objc private func nextAyah() {

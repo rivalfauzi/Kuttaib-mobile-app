@@ -130,14 +130,7 @@ final class DaftarAyatView: UIView {
     }
     
     private func handleTap(_ item: AyatItem) {
-        switch item.status {
-        case .completed:
-            print(item.number)
-        case .current:
-            onContinue?(item)
-        default:
-            break
-        }
+        onContinue?(item)
     }
 }
 

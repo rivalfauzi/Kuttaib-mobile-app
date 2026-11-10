@@ -171,8 +171,13 @@ final class HomeViewController: BaseViewController {
         taskSection.onTappedButton = {[weak self] task, surah in
             guard let self else { return }
             
-            if case .ziyadah = task.type {
+            switch task.type {
+            case .ziyadah:
                 presenter.navigateTo(.memorizationSession(task: task, surah: surah))
+            case .murojaah:
+                presenter.navigateTo(.murojaahSession(task: task, surah: surah))
+            default:
+                break
             }
         }
         

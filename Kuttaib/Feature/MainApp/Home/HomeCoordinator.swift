@@ -13,6 +13,7 @@ final class HomeCoordinator {
     enum Navigate {
         case memorizationSession(task: TaskModel, surah: Quran.Surah.Response?)
         case targetDetail(user: UserModel)
+        case murojaahSession(task: TaskModel, surah: Quran.Surah.Response?)
     }
     
     init(navigationController: UINavigationController) {
@@ -35,10 +36,15 @@ final class HomeCoordinator {
             
             navigationController.pushViewController(vc, animated: true)
         case .targetDetail(let user):
-            let presenter = DetailTargetPresenter(navigation: navigationController, user: user)
+            let presenter = DetailTargetPresenter(user: user)
             presenter.router = self
             
             let vc = DetailTargetViewController(presenter: presenter)
+            vc.hidesBottomBarWhenPushed = true
+            navigationController.pushViewController(vc, animated: true)
+        case .murojaahSession(let task, let surah):
+            let presenter = MurojaahSessionPresenter(task: task, surah: surah)
+            let vc = MurojaahSessionViewController(presenter: presenter)
             vc.hidesBottomBarWhenPushed = true
             navigationController.pushViewController(vc, animated: true)
         }
@@ -53,7 +59,14 @@ final class HomeCoordinator {
 
 extension HomeCoordinator: DetailTargetRouting {
     func openTask(task: TaskModel, surah: Quran.Surah.Response?) {
-        navigateTo(.memorizationSession(task: task, surah: surah))
+        switch task.type {
+        case .ziyadah:
+            navigateTo(.memorizationSession(task: task, surah: surah))
+        case .murojaah:
+            navigateTo(.murojaahSession(task: task, surah: surah))
+        default:
+            break
+        }
     }
     
     

@@ -66,7 +66,7 @@ final class UIIconView: UIView {
         backgroundIcon.layer.cornerRadius = cornerRadius
     }
     
-    func setImage(_ image: UIImage) {
+    func setImage(_ image: UIImage?) {
         icon.image = image
     }
     
