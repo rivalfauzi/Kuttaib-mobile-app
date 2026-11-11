@@ -16,7 +16,7 @@ enum TargetRepository {
 
         request.predicate = NSPredicate(
             format: "status == %@",
-            "active"
+            TargetStatus.active.rawValue
         )
 
         do {
@@ -35,7 +35,7 @@ enum TargetRepository {
             target.totalVerseCount = Int16(data.totalVerseCount ?? 0)
             target.completedVerseCount = 0
 
-            target.status = "active"
+            target.status = TargetStatus.active.rawValue
             target.createdAt = Date()
 
             try context.save()
@@ -54,7 +54,7 @@ enum TargetRepository {
 
         request.predicate = NSPredicate(
             format: "status == %@",
-            "active"
+            TargetStatus.active.rawValue
         )
 
         request.fetchLimit = 1
@@ -65,6 +65,42 @@ enum TargetRepository {
             if let data = activeTarget?.toModel() {
                 callback(.success(data))
             }
+        } catch {
+            callback(.failure(error))
+        }
+    }
+    
+    static func switchTarget(data: TargetModel, callback: @escaping (Result<TargetModel?, Error>) -> Void) {
+        let context = CoreDataManager.shared.context
+        let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
+        
+        request.predicate = NSPredicate(
+            format: "status == %@",
+            TargetStatus.active.rawValue
+        )
+        
+        request.fetchLimit = 1
+        
+        do {
+            let activeTarget = try context.fetch(request).first
+            activeTarget?.status = TargetStatus.inActive.rawValue
+            
+            let newTarget = TargetsData(context: context)
+            
+            newTarget.id = UUID()
+            newTarget.targetType = data.targetType?.rawValue
+            newTarget.targetNumber = Int16(data.targetNumber ?? 0)
+            
+            newTarget.totalVerseCount = Int16(data.totalVerseCount ?? 0)
+            newTarget.completedVerseCount = 0
+            
+            newTarget.status = TargetStatus.active.rawValue
+            newTarget.createdAt = Date()
+            
+            try context.save()
+            
+            callback(.success(newTarget.toModel()))
+            
         } catch {
             callback(.failure(error))
         }

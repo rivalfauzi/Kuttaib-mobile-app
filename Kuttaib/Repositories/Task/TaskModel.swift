@@ -16,6 +16,7 @@ struct TaskModel {
     var completedEndAyah: Int?
     var type: TaskType?
     var taskDate: Date?
+    var shouldDisplayOnDashboard: Bool?
     
     var lastCompletedAyah: Int? {
         guard let startAyah, let completedEndAyah else {

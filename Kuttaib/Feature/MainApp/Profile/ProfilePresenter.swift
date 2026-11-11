@@ -60,7 +60,13 @@ final class ProfilePresenter {
                     $0 + ($1.completedEndAyah ?? 0)
                 }
                 
-                let totalDays = ziyadahTasks.count
+                let totalDays = Set<Date>(
+                    ziyadahTasks.compactMap {
+                        guard let date = $0.taskDate else { return nil }
+                        return Calendar.current.startOfDay(for: date)
+                    }
+                ).count
+                
                 let longestStreak = longestStreak(from: ziyadahTasks)
                 
                 let data = ProfileStatisticEntity(totalAyah: totalAyah, totalDays: totalDays, longestStreak: longestStreak)
@@ -80,6 +86,10 @@ final class ProfilePresenter {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {[weak self] in
             self?.onGetReminderData?(self?.reminderData)
         }
+    }
+    
+    func fetchSurah(callback: @escaping (Result<[Quran.Surah.Response], Error>) -> Void) {
+        QuranRepository.fetchSurah(callback: callback)
     }
     
     private func longestStreak(from tasks: [TaskModel]) -> Int {
@@ -145,6 +155,12 @@ final class ProfilePresenter {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 self?.onFetchUserData?(result)
             }
+        }
+    }
+    
+    func switchTarget(_ data: TargetModel, callback: @escaping (Result<TargetModel?, Error>) -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            TargetRepository.switchTarget(data: data, callback: callback)
         }
     }
 }

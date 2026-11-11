@@ -49,9 +49,12 @@ enum TaskRepository {
                 task.type = data.type?.rawValue
                 task.taskDate = data.taskDate
                 task.target = activeTarget
+                task.shouldDisplayOnDashboard = data.shouldDisplayOnDashboard ?? true
                 
-                let completedVerseCount = task.target?.completedVerseCount ?? 0
-                task.target?.completedVerseCount = completedVerseCount + 1
+                if case .ziyadah = data.type {
+                    let completedVerseCount = task.target?.completedVerseCount ?? 0
+                    task.target?.completedVerseCount = completedVerseCount + 1
+                }
 
                 try context.save()
 
@@ -83,7 +86,7 @@ enum TaskRepository {
         do {
             if let task = try context.fetch(request).first {
                 if let completedEndAyah = data.completedEndAyah {
-                    if completedEndAyah > task.completedEndAyah {
+                    if completedEndAyah > task.completedEndAyah, data.type == .ziyadah {
                         task.target?.completedVerseCount += 1
                     }
                     

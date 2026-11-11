@@ -51,8 +51,6 @@ final class MemorizationViewController: BaseViewController {
     
     let mainVStack = UIStackView()
     
-    let alertCompleted = TaskCompletedViewController()
-    
     var stepIndex = 0
     private var recordingTimer: Timer?
     private var recordingSeconds = 0
@@ -194,7 +192,6 @@ final class MemorizationViewController: BaseViewController {
         ])
         
         setupConditionalView()
-        setupAlertView()
         
         nextButton.addTarget(self, action: #selector(startMemorizeTapped), for: .touchUpInside)
         micButton.addTarget(self, action: #selector(recordTapped), for: .touchUpInside)
@@ -343,7 +340,11 @@ final class MemorizationViewController: BaseViewController {
         updateView()
     }
     
-    private func setupAlertView() {
+    private func showAlertDoneTask(nextSurah: String, nextAyat: Int) {
+        let alertCompleted = TaskCompletedViewController()
+        let badgeText = "Berikutnya: surah \(nextSurah) ayat \(nextAyat)"
+        alertCompleted.setBadge(badgeText)
+        
         alertCompleted.modalPresentationStyle = .overCurrentContext
         alertCompleted.modalTransitionStyle = .crossDissolve
         
@@ -362,6 +363,25 @@ final class MemorizationViewController: BaseViewController {
                 }
             }
         }
+        
+        present(alertCompleted, animated: false)
+    }
+    
+    private func showTargetDoneAlert() {
+        let alertCompletedTarget = TargetCompletedView()
+        
+        alertCompletedTarget.modalTransitionStyle = .crossDissolve
+        alertCompletedTarget.modalPresentationStyle = .overCurrentContext
+        
+        alertCompletedTarget.onContinue = {
+            
+        }
+        
+        alertCompletedTarget.onFinish = {
+            
+        }
+        
+        present(alertCompletedTarget, animated: false)
     }
     
     private func reloadCollectionView() {
@@ -404,8 +424,13 @@ final class MemorizationViewController: BaseViewController {
                     case .success(let response):
                         presenter.task = response
                         
-                        if response.lastCompletedAyah == response.endAyah {
-                            present(alertCompleted, animated: false)
+                        if response.lastCompletedAyah == presenter.surah?.numberOfAyahs {
+                            
+                        } else if response.lastCompletedAyah == response.endAyah {
+                            showAlertDoneTask(
+                                nextSurah: presenter.surah?.englishName ?? "",
+                                nextAyat: (response.endAyah ?? 0) + 1
+                            )
                         } else {
                             swipeView()
                         }
@@ -426,8 +451,9 @@ final class MemorizationViewController: BaseViewController {
     @objc private func startMemorizeTapped() {
         switch presenter.viewState {
         case .learn:
-            presenter.viewState = .record
-            setupConditionalView()
+//            presenter.viewState = .record
+//            setupConditionalView()
+            showTargetDoneAlert()
         case .record:
             break
         case .done:
@@ -436,9 +462,15 @@ final class MemorizationViewController: BaseViewController {
                 
                 switch result {
                 case .success(let response):
-                    if response.lastCompletedAyah == response.endAyah, (stepIndex + 1) == response.completedEndAyah {
+                    if response.lastCompletedAyah == presenter.surah?.numberOfAyahs {
                         presenter.task = response
-                        present(alertCompleted, animated: false)
+                        showTargetDoneAlert()
+                    } else if response.lastCompletedAyah == response.endAyah, (stepIndex + 1) == response.completedEndAyah {
+                        presenter.task = response
+                        showAlertDoneTask(
+                            nextSurah: presenter.surah?.englishName ?? "",
+                            nextAyat: (response.endAyah ?? 0) + 1
+                        )
                     } else {
                         presenter.viewState = .learn
                         setupConditionalView()

@@ -211,7 +211,7 @@ final class HomeStatisticsView: UIView {
     func setConfiguration(_ tasks: [TaskModel], dailyTarget: Int) {
         let weeklyTasks = tasks.filter {
             guard let taskDate = $0.taskDate else { return false }
-            return taskDate >= startDate && taskDate <= endDate
+            return taskDate >= startDate && taskDate <= endDate && $0.type == .ziyadah
         }
         let strike = calculateCurrentStreak(tasks)
         self.dailyTarget = dailyTarget
@@ -225,19 +225,22 @@ final class HomeStatisticsView: UIView {
     }
     
     private func setWeeklyAyat(_ tasks: [TaskModel]) {
-        let ziyadahTasks = tasks.filter {
-            $0.type == .ziyadah
-        }
-        
         var totalAyah: Int = 0
         var median = "0.0"
         
-        if !ziyadahTasks.isEmpty {
-            totalAyah = ziyadahTasks.reduce(0) { result, task in
+        if !tasks.isEmpty {
+            totalAyah = tasks.reduce(0) { result, task in
                 return result + (task.completedEndAyah ?? 0)
             }
             
-            let doubleMedian = Double(totalAyah) / Double(ziyadahTasks.count)
+            let totalDays = Set<Date>(
+                tasks.compactMap {
+                    guard let date = $0.taskDate else { return nil }
+                    return Calendar.current.startOfDay(for: date)
+                }
+            ).count
+            
+            let doubleMedian = Double(totalAyah) / Double(totalDays)
             median = String(format: "%.1f", doubleMedian)
         }
 
@@ -261,10 +264,14 @@ final class HomeStatisticsView: UIView {
             let tasksInDay = tasks.filter { task in
                 guard let taskDate = task.taskDate else { return false }
                 return calendar.isDate(taskDate, inSameDayAs: date)
-            }.first
+            }
+            
+            let totalAyah = tasksInDay.reduce(0) { result, task in
+                return result + (task.completedEndAyah ?? 0)
+            }
 
             let dayName = dayFormatter.string(from: date)
-            weeklyProgress.append(WeeklyProgress(day: dayName, count: tasksInDay?.completedEndAyah ?? 0, maxCount: dailyTarget))
+            weeklyProgress.append(WeeklyProgress(day: dayName, count: totalAyah, maxCount: dailyTarget))
         }
 
         self.weeklyProgress = weeklyProgress

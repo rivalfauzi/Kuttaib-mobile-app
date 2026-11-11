@@ -15,34 +15,15 @@ final class TaskCompletedViewController: UIViewController {
 
     private let dimView = UIView()
     private let containerView = UIView()
-
-    private let iconView: UIImageView = {
-        let imageView = UIImageView(
-            image: UIImage(named: "il-done-task")
-        )
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Alhamdulillah!"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textAlignment = .center
-        return label
-    }()
-
-    private let descriptionLabel: UILabel = {
-        let label = UILabel()
-        label.text = "Seluruh target hafalan telah diselesaikan. Lanjut ke ayat berikutnya?"
-        label.numberOfLines = 0
-        label.textAlignment = .center
-        label.textColor = .secondaryLabel
-        return label
-    }()
-
-    private let continueButton = PrimaryButton(title: "Lanjut ke Ayat Berikutnya")
+    private let iconView = UIImageView()
+    private let titleLabel = UILabel()
+    private let descriptionLabel = UILabel()
+    private let badgeLabel = UILabel()
+    private let badgeView = UIView()
+    private let badgeContainer = UIView()
+    private let continueButton = PrimaryButton(title: "Lanjut")
     private let finishButton = UIButton()
+    private let mainVStack = UIStackView()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -54,10 +35,7 @@ final class TaskCompletedViewController: UIViewController {
         super.viewDidAppear(animated)
         showAnimation()
     }
-}
-
-private extension TaskCompletedViewController {
-
+    
     func setupView() {
         view.backgroundColor = .clear
         dimView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
@@ -70,49 +48,86 @@ private extension TaskCompletedViewController {
         containerView.layer.cornerRadius = 24
         containerView.translatesAutoresizingMaskIntoConstraints = false
         
+        iconView.image = UIImage(named: "il-done-task")
+        iconView.contentMode = .scaleAspectFit
+        
+        titleLabel.text = "Alhamdulillah!"
+        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textAlignment = .center
+        
+        descriptionLabel.text = "Seluruh ayat pada tugas hari ini sudah kamu selesaikan."
+        descriptionLabel.numberOfLines = 0
+        descriptionLabel.textAlignment = .center
+        descriptionLabel.textColor = .secondaryLabel
+        
+        badgeLabel.font = .systemFont(ofSize: 13, weight: .bold)
+        badgeLabel.textColor = .primaryGreen
+        badgeLabel.numberOfLines = 0
+        badgeLabel.textAlignment = .center
+        badgeLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        badgeView.addSubview(badgeLabel)
+        badgeView.layer.cornerRadius = 12
+        badgeView.backgroundColor = .backgroundGreen
+        badgeView.translatesAutoresizingMaskIntoConstraints = false
+        
+        badgeContainer.addSubview(badgeView)
+        
+        if let badgeText = badgeLabel.text, !badgeText.isEmpty {
+            badgeContainer.isHidden = false
+        } else {
+            badgeContainer.isHidden = true
+        }
+        
         finishButton.setTitle("Selesai untuk saat ini", for: .normal)
         finishButton.setTitleColor(.primaryGreen, for: .normal)
         finishButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
-
-        [iconView, titleLabel, descriptionLabel, continueButton, finishButton].forEach {
-            containerView.addSubview($0)
+        
+        [iconView, titleLabel, descriptionLabel, badgeContainer, continueButton, finishButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
+            mainVStack.addArrangedSubview($0)
         }
+        
+        mainVStack.axis = .vertical
+        mainVStack.spacing = 24
+        mainVStack.alignment = .fill
+        mainVStack.distribution = .fill
+        mainVStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        containerView.addSubview(mainVStack)
 
         NSLayoutConstraint.activate([
             containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
             containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
             
-            iconView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
-            iconView.widthAnchor.constraint(equalToConstant: 160),
-            iconView.heightAnchor.constraint(equalToConstant: 160),
-            iconView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            iconView.widthAnchor.constraint(equalToConstant: 150),
+            iconView.heightAnchor.constraint(equalToConstant: 150),
             
-            titleLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 12),
-            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            badgeLabel.topAnchor.constraint(equalTo: badgeView.topAnchor, constant: 8),
+            badgeLabel.leadingAnchor.constraint(equalTo: badgeView.leadingAnchor, constant: 16),
+            badgeLabel.trailingAnchor.constraint(equalTo: badgeView.trailingAnchor, constant: -16),
+            badgeLabel.bottomAnchor.constraint(equalTo: badgeView.bottomAnchor, constant: -8),
+            badgeView.topAnchor.constraint(equalTo: badgeContainer.topAnchor),
+            badgeView.bottomAnchor.constraint(equalTo: badgeContainer.bottomAnchor),
             
-            descriptionLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
-            descriptionLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            descriptionLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            badgeView.centerXAnchor.constraint(equalTo: badgeContainer.centerXAnchor),
             
-            continueButton.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 24),
-            continueButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
-            continueButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
-
-            finishButton.topAnchor.constraint(equalTo: continueButton.bottomAnchor, constant: 16),
-            finishButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -20),
-            finishButton.centerXAnchor.constraint(equalTo: containerView.centerXAnchor)
+            mainVStack.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
+            mainVStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24),
+            mainVStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            mainVStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -24),
         ])
     }
-}
-
-private extension TaskCompletedViewController {
-
+    
     func setupAction() {
         continueButton.addTarget(self, action: #selector(continueTapped), for: .touchUpInside)
         finishButton.addTarget(self, action: #selector(finishTapped), for: .touchUpInside)
+    }
+    
+    func setBadge(_ text: String) {
+        badgeView.isHidden = false
+        badgeLabel.text = text
     }
 
     @objc func continueTapped() {
@@ -124,10 +139,7 @@ private extension TaskCompletedViewController {
         dismiss(animated: false)
         onFinish?()
     }
-}
-
-private extension TaskCompletedViewController {
-
+    
     func showAnimation() {
         containerView.alpha = 0
         containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)

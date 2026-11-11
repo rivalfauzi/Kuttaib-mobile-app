@@ -22,6 +22,7 @@ extension TasksData {
     @NSManaged public var type: String?
     @NSManaged public var taskDate: Date?
     @NSManaged public var target: TargetsData?
+    @NSManaged public var shouldDisplayOnDashboard: Bool
     
     func toModel() -> TaskModel {
         TaskModel(
@@ -32,7 +33,8 @@ extension TasksData {
             endAyah: Int(endAyah),
             completedEndAyah: Int(completedEndAyah),
             type: TaskType(rawValue: type ?? ""),
-            taskDate: taskDate
+            taskDate: taskDate,
+            shouldDisplayOnDashboard: shouldDisplayOnDashboard
         )
     }
 }

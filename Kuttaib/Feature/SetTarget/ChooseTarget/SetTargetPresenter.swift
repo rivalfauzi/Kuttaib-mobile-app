@@ -21,12 +21,12 @@ final class SetTargetPresenter {
             type: .main,
             items: [
                 .init(
-                    title: "Juz 30",
+                    title: "An-Naba",
                     subtitle: "Cocok untuk pemula",
                     icon: "book.pages.fill",
                     populer: true,
-                    value: 30,
-                    type: TargetType.juz.rawValue
+                    value: 78,
+                    type: TargetType.surah.rawValue
                 ),
                 .init(
                     title: "Al-Mulk",

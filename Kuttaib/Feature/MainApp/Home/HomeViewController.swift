@@ -149,11 +149,10 @@ final class HomeViewController: BaseViewController {
             
             switch result {
             case .success(let data):
-                guard let data, let target = presenter.userData?.dailyVerseTarget else { return }
+                guard let data else { return }
                 presenter.targetData = data
                 targetCard.setConfig(data)
                 targetCard.hideSkeleton()
-                statisticSection.setConfiguration(data.tasks ?? [], dailyTarget: target)
             case .failure(let error):
                 print(error)
             }
@@ -164,6 +163,12 @@ final class HomeViewController: BaseViewController {
             
             self.taskSection.setDataTask(data, surahData: presenter.surahData)
             self.recomenSection.setData(recomendationData)
+        }
+        
+        presenter.onFetchAllTaskData = {[weak self] data in
+            guard let self, let target = presenter.userData?.dailyVerseTarget else { return }
+            
+            statisticSection.setConfiguration(data, dailyTarget: target)
         }
     }
     

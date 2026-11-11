@@ -110,7 +110,7 @@ final class DetailTargetViewController: BaseViewController {
                 
                 headerView.configure(surahData, target: targetData, user: presenter.userData)
                 
-                if targetData.completedVerseCount ?? 0 <= targetData.totalVerseCount ?? 0 {
+                if targetData.completedVerseCount ?? 0 >= targetData.totalVerseCount ?? 0 {
                     mainButton.isEnabled = false
                 }
                 

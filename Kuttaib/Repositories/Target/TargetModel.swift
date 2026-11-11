@@ -13,8 +13,14 @@ struct TargetModel {
     var targetType: TargetType?
     var totalVerseCount: Int?
     var completedVerseCount: Int?
-    var status: String?
+    var status: TargetStatus?
     var createdAt: Date?
     var completedAt: Date?
     var tasks: [TaskModel]?
+}
+
+enum TargetStatus: String {
+    case active
+    case inActive
+    case done
 }

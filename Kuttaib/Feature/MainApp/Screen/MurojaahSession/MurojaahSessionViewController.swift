@@ -194,14 +194,25 @@ final class MurojaahSessionViewController: BaseViewController {
     }
     
     private func murojaahSessionDoneTap(_ buttonType: MurojaahButtonType) {
-        switch buttonType {
-        case .done:
-            self.navigationController?.popViewController(animated: true)
-        case .next:
-            stepIndex += 1
-            updateHeaderView()
-            updateAyatView()
-            stepIndicator.update(step: stepIndex)
+        presenter.saveMurojaahTask {[weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success(let response):
+                presenter.task = response
+                
+                if case .done = buttonType {
+                    self.navigationController?.popViewController(animated: true)
+                } else {
+                    stepIndex += 1
+                    updateHeaderView()
+                    updateAyatView()
+                    stepIndicator.update(step: stepIndex)
+                }
+                
+            case .failure(let error):
+                print("Error: \(error)")
+            }
         }
     }
     

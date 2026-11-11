@@ -32,7 +32,7 @@ extension TargetsData {
             targetType: TargetType(rawValue: targetType ?? ""),
             totalVerseCount: Int(totalVerseCount),
             completedVerseCount: Int(completedVerseCount),
-            status: status,
+            status: TargetStatus(rawValue: status ?? ""),
             createdAt: createdAt,
             completedAt: completedAt,
             tasks: taskModels

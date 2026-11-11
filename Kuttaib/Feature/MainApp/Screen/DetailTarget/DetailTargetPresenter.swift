@@ -212,6 +212,11 @@ final class DetailTargetPresenter {
             
             if let todayTask {
                 selectedTask = todayTask
+                
+                if todayTask.status == .done, let todayEndAyah = selectedTask.endAyah {
+                    selectedTask.endAyah = todayEndAyah + 1
+                    selectedTask.status = .inProgress
+                }
             } else if let newTask {
                 selectedTask = newTask
             } else {
@@ -222,7 +227,7 @@ final class DetailTargetPresenter {
             
             router?.openTask(task: selectedTask, surah: surahData)
         case .murojaahTask(let item):
-            let generateTask = TaskModel(status: .notStart, surahNumber: surahData?.number, startAyah: item.number, endAyah: item.number, completedEndAyah: 0, type: .murojaah, taskDate: Date())
+            let generateTask = TaskModel(status: .notStart, surahNumber: surahData?.number, startAyah: item.number, endAyah: item.number, completedEndAyah: 0, type: .murojaah, taskDate: Date(), shouldDisplayOnDashboard: false)
             
             router?.openTask(task: generateTask, surah: surahData)
         }
@@ -240,21 +245,21 @@ final class DetailTargetPresenter {
             .first
         
         var newTask = TaskModel()
+        
         newTask.status = .notStart
         newTask.completedEndAyah = 0
         newTask.type = .ziyadah
         newTask.taskDate = Date()
-        
         newTask.surahNumber = surahData?.number
+        newTask.shouldDisplayOnDashboard = true
+        
         var startAyah = 1
         
         if let lastTask, let taskStart = lastTask.startAyah, let completeAyah = lastTask.completedEndAyah  {
             startAyah = taskStart + completeAyah
-            newTask.startAyah = startAyah
-        } else {
-            newTask.startAyah = startAyah
         }
         
+        newTask.startAyah = startAyah
         newTask.endAyah = min((startAyah + (userData.dailyVerseTarget - 1)), surahData?.numberOfAyahs ?? 0)
         
         self.newTask = newTask

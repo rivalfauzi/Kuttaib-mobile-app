@@ -109,10 +109,17 @@ final class SetTargetContainerViewController: BaseViewController {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
 //        skipButton.addTarget(self, action: #selector(skipButtonTapped), for: .touchUpInside)
         
-        sheet.didSelect = { [weak self] index, type, name in
+        sheet.didSelect = { [weak self] item in
             guard let self else { return }
             
-            setDataStore(.main, data: .init(title: name, subtitle: "", icon: "", populer: false, value: index, type: type.rawValue))
+            setDataStore(.main, data: .init(title: item.englishName, subtitle: "", icon: "", populer: false, value: item.number, type: TargetType.surah.rawValue))
+        }
+        
+        sheet.onClose = {[weak self] in
+            guard let self else { return }
+            
+            presenter.selectedDataIndexes.removeValue(forKey: stepIndex)
+            contentCollectionView.reloadData()
         }
     }
     
@@ -169,7 +176,7 @@ final class SetTargetContainerViewController: BaseViewController {
             switch result {
             case .success(let response):
                 presenter.surahData = response
-                sheet.surahItems = response
+                sheet.setData(response)
             case .failure(let error):
                 print("Error: \(error)")
             }
@@ -179,8 +186,10 @@ final class SetTargetContainerViewController: BaseViewController {
     
     private func showPopupCustomTarget() {
         if let presentation = sheet.sheetPresentationController, presenter.surahData != nil {
-            presentation.detents = [.medium(), .large()]
-            presentation.prefersGrabberVisible = true
+            presentation.detents = [.large()]
+            presentation.prefersGrabberVisible = false
+            
+            sheet.isModalInPresentation = true
             present(sheet, animated: true)
         }
     }

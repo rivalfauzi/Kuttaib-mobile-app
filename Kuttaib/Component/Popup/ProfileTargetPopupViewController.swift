@@ -80,7 +80,7 @@ final class ProfileTargetPopupViewController: UIViewController {
         collectionView.register(MainTargetCell.self, forCellWithReuseIdentifier: MainTargetCell.identifier)
         collectionHeightConstraint = collectionView.heightAnchor.constraint(equalToConstant: 1)
         
-        bottomConstraint = containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 800)
+        bottomConstraint = containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
         
         infoIcon.image = UIImage(systemName: "info.circle")
         infoIcon.tintColor = .systemGray2
@@ -89,7 +89,7 @@ final class ProfileTargetPopupViewController: UIViewController {
         infoLabel.font = .systemFont(ofSize: 12)
         infoLabel.textColor = .systemGray2
         infoLabel.numberOfLines = 0
-        infoLabel.text = "Tugas yang sudah berjalan tidak berubah. Pengaturan baru berlaku hari ini atau mulai besok jika tugas sudah dimulai."
+        infoLabel.text = "Pastikan target yang dipilih sudah sesuai. Target hafalan hanya bisa diubah sebelum memulai tugas ziyadah hari ini."
         
         [infoIcon, infoLabel].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -164,13 +164,15 @@ final class ProfileTargetPopupViewController: UIViewController {
         dimmedView.addGestureRecognizer(tapGesture)
     }
     
-    func configure(data: [MainTargetEntity], value: Int, title: String, subtitle: String, type: SetTargetViewType) {
+    func configure(data: [MainTargetEntity], value: Int, title: String, subtitle: String, type: SetTargetViewType, todayZiyadah: Bool) {
         items = data
         selectedValue = value
         
         titleLabel.text = title
         subtitleLabel.text = subtitle
         dataType = type
+        
+        saveButton.isEnabled = !todayZiyadah
         
         collectionView.reloadData()
         collectionView.layoutIfNeeded()

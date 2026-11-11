@@ -118,6 +118,11 @@ final class ProfileViewController: BaseViewController {
         targetCard.onTargetTapped = {[weak self] buttonType in
             guard let self else { return }
             
+            let todayZiyadah = presenter.activeTarget?.tasks?.first {
+                $0.type == .ziyadah &&
+                Calendar.current.isDateInToday($0.taskDate ?? .distantPast)
+            } != nil
+            
             switch buttonType {
             case .memorization:
                 let userOptions = UserOptions.dailyVersesTarget
@@ -127,7 +132,8 @@ final class ProfileViewController: BaseViewController {
                     value: presenter.userData?.dailyVerseTarget ?? 0,
                     title: "Target Harian",
                     subtitle: "Berapa ayat yang ingin kamu hafal setiap hari?",
-                    type: .daily
+                    type: .daily,
+                    todayZiyadah: todayZiyadah
                 )
                 
                 targetBottomSheet.modalPresentationStyle = .overFullScreen
@@ -142,7 +148,8 @@ final class ProfileViewController: BaseViewController {
                     value: presenter.userData?.dailyStudyTime ?? 0,
                     title: "Waktu Belajar",
                     subtitle: "Berapa waktu yang bisa kamu luangkan setiap hari?",
-                    type: .time
+                    type: .time,
+                    todayZiyadah: todayZiyadah
                 )
                 
                 targetBottomSheet.modalPresentationStyle = .overFullScreen
@@ -150,8 +157,30 @@ final class ProfileViewController: BaseViewController {
                 
                 present(targetBottomSheet, animated: false)
             case .target:
-                print("Target popup")
-                return
+                presenter.fetchSurah { result in
+                    switch result {
+                    case .success(let response):
+                        let switchTargetBottomSheet = TargetPickerBottomSheet()
+                        
+                        switchTargetBottomSheet.setData(response, selectedNumber: self.presenter.activeTarget?.targetNumber)
+                        switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
+                        
+                        switchTargetBottomSheet.didSelect = { item in
+                            self.targetChange(item)
+                        }
+                        
+                        if let presentation = switchTargetBottomSheet.sheetPresentationController {
+                            presentation.detents = [.large()]
+                            presentation.prefersGrabberVisible = false
+                            
+                            switchTargetBottomSheet.isModalInPresentation = true
+                            self.present(switchTargetBottomSheet, animated: true)
+                        }
+                        
+                    case .failure(let error):
+                        print("Error: \(error)")
+                    }
+                }
             }
         }
         
@@ -292,5 +321,30 @@ final class ProfileViewController: BaseViewController {
         )
 
         present(alert, animated: true)
+    }
+    
+    private func targetChange(_ item: Quran.Surah.Response) {
+        targetCard.showAnimatedGradientSkeleton()
+        
+        let newTarget = TargetModel(
+            targetNumber: item.number,
+            targetType: .surah,
+            totalVerseCount: item.numberOfAyahs
+        )
+        
+        presenter.switchTarget(newTarget) {[weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success(let response):
+                presenter.activeTarget = response
+                
+                targetCard.configure(subtitle: "\(response?.targetType?.rawValue ?? "") \(response?.targetNumber ?? 0)", type: .target)
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+            
+            targetCard.hideSkeleton()
+        }
     }
 }

@@ -16,6 +16,7 @@ final class HomePresenter {
     var onFetchUserData: ((Result<UserModel, Error>) -> Void)?
     var onFetchTargetData: ((Result<TargetModel?, Error>) -> Void)?
     var onFetchTaskData: (([TaskModel]) -> Void)?
+    var onFetchAllTaskData: (([TaskModel]) -> Void)?
     
     init(coordinator: HomeCoordinator) {
         self.coordinator = coordinator
@@ -40,8 +41,8 @@ final class HomePresenter {
             }
         }
         
-        
         var juzData: [Quran.MetaData.Response.Juz.Reference] = []
+        var allTaskData: [TaskModel] = []
         var errorFlow: Bool = false
         
         group.enter()
@@ -68,6 +69,18 @@ final class HomePresenter {
             }
         }
         
+        group.enter()
+        TaskRepository.fetchTask { result in
+            defer { group.leave() }
+            switch result {
+            case .success(let response):
+                allTaskData = response
+            case .failure(let error):
+                print("Error: \(error)")
+                errorFlow = true
+            }
+        }
+        
         group.notify(queue: .main) { [weak self] in
             guard !errorFlow, let self, let targetData else {
                 return
@@ -87,7 +100,8 @@ final class HomePresenter {
             var todayTask = targetData.tasks?.filter {
                 $0.taskDate.map {
                     Calendar.current.isDateInToday($0)
-                } ?? false
+                } ?? false &&
+                $0.shouldDisplayOnDashboard ?? true
             } ?? []
             
             if todayTask.isEmpty {
@@ -143,6 +157,7 @@ final class HomePresenter {
                 }
             }
             
+            onFetchAllTaskData?(allTaskData)
             onFetchTaskData?(todayTask)
         }
     }
