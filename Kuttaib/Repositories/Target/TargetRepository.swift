@@ -9,7 +9,7 @@ import Foundation
 import CoreData
 
 enum TargetRepository {
-    static func createTarget(data: TargetModel, callback: @escaping (Result<TargetsData, Error>) -> Void) {
+    static func createTarget(data: TargetModel, callback: @escaping (Result<TargetModel, Error>) -> Void) {
 
         let context = CoreDataManager.shared.context
         let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
@@ -40,7 +40,7 @@ enum TargetRepository {
 
             try context.save()
 
-            callback(.success(target))
+            callback(.success(target.toModel()))
 
         } catch {
             callback(.failure(error))
@@ -61,10 +61,7 @@ enum TargetRepository {
 
         do {
             let activeTarget = try context.fetch(request).first
-            
-            if let data = activeTarget?.toModel() {
-                callback(.success(data))
-            }
+            callback(.success(activeTarget?.toModel()))
         } catch {
             callback(.failure(error))
         }
@@ -101,6 +98,43 @@ enum TargetRepository {
             
             callback(.success(newTarget.toModel()))
             
+        } catch {
+            callback(.failure(error))
+        }
+    }
+    
+    static func doneTarget(callback: @escaping(Result<TargetModel?, Error>) -> Void) {
+        let context = CoreDataManager.shared.context
+        let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
+        
+        request.predicate = NSPredicate(
+            format: "status == %@",
+            TargetStatus.active.rawValue
+        )
+        
+        request.fetchLimit = 1
+        
+        do {
+            let target = try context.fetch(request).first
+            target?.status = TargetStatus.done.rawValue
+            try context.save()
+            callback(.success(target?.toModel()))
+        } catch {
+            callback(.failure(error))
+        }
+    }
+    
+    static func getAllTarget(callback: @escaping(Result<[TargetModel], Error>) -> Void) {
+        let context = CoreDataManager.shared.context
+        let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
+        
+        do {
+            let result = try context.fetch(request)
+            let targets = result.map {
+                $0.toModel()
+            }
+            
+            callback(.success(targets))
         } catch {
             callback(.failure(error))
         }

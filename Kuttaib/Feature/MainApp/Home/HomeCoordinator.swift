@@ -11,7 +11,7 @@ final class HomeCoordinator {
     let navigationController: UINavigationController
     
     enum Navigate {
-        case memorizationSession(task: TaskModel, surah: Quran.Surah.Response?)
+        case memorizationSession(task: TaskModel, user: UserModel, surah: Quran.Surah.Response?)
         case targetDetail(user: UserModel)
         case murojaahSession(task: TaskModel, surah: Quran.Surah.Response?)
     }
@@ -29,8 +29,8 @@ final class HomeCoordinator {
     
     func navigateTo(_ navigate: Navigate) {
         switch navigate {
-        case .memorizationSession(let task, let surah):
-            let presenter = MemorizationPresenter(task: task, surah: surah, navigation: navigationController)
+        case .memorizationSession(let task, let user,  let surah):
+            let presenter = MemorizationPresenter(task: task, userData: user,  surah: surah, navigation: navigationController)
             let vc = MemorizationViewController(presenter: presenter)
             vc.hidesBottomBarWhenPushed = true
             
@@ -58,10 +58,10 @@ final class HomeCoordinator {
 }
 
 extension HomeCoordinator: DetailTargetRouting {
-    func openTask(task: TaskModel, surah: Quran.Surah.Response?) {
+    func openTask(task: TaskModel, user: UserModel, surah: Quran.Surah.Response?) {
         switch task.type {
         case .ziyadah:
-            navigateTo(.memorizationSession(task: task, surah: surah))
+            navigateTo(.memorizationSession(task: task, user: user, surah: surah))
         case .murojaah:
             navigateTo(.murojaahSession(task: task, surah: surah))
         default:

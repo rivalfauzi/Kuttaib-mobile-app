@@ -14,7 +14,7 @@ final class HomePresenter {
     var surahData: [Quran.Surah.Response]?
     
     var onFetchUserData: ((Result<UserModel, Error>) -> Void)?
-    var onFetchTargetData: ((Result<TargetModel?, Error>) -> Void)?
+    var onFetchTargetData: ((TargetModel?) -> Void)?
     var onFetchTaskData: (([TaskModel]) -> Void)?
     var onFetchAllTaskData: (([TaskModel]) -> Void)?
     
@@ -33,17 +33,21 @@ final class HomePresenter {
             }
         }
         
-        group.enter()
-        TargetRepository.getActiveTarget { [weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onFetchTargetData?(result)
-                group.leave()
-            }
-        }
-        
         var juzData: [Quran.MetaData.Response.Juz.Reference] = []
         var allTaskData: [TaskModel] = []
         var errorFlow: Bool = false
+        
+        group.enter()
+        TargetRepository.getActiveTarget { [weak self] result in
+            defer { group.leave() }
+            switch result {
+            case .success(let response):
+                self?.targetData = response
+            case .failure(let error):
+                print("Error: \(error)")
+                errorFlow = true
+            }
+        }
         
         group.enter()
         QuranRepository.fetchSurah {[weak self] result in
@@ -82,11 +86,11 @@ final class HomePresenter {
         }
         
         group.notify(queue: .main) { [weak self] in
-            guard !errorFlow, let self, let targetData else {
+            guard !errorFlow, let self else {
                 return
             }
             
-            let lastTask = targetData.tasks?
+            let lastTask = targetData?.tasks?
                 .filter {
                     $0.type == .ziyadah &&
                     !Calendar.current.isDateInToday($0.taskDate ?? .distantPast)
@@ -97,7 +101,7 @@ final class HomePresenter {
                 }
                 .first
             
-            var todayTask = targetData.tasks?.filter {
+            var todayTask = targetData?.tasks?.filter {
                 $0.taskDate.map {
                     Calendar.current.isDateInToday($0)
                 } ?? false &&
@@ -137,7 +141,7 @@ final class HomePresenter {
                         juzsData: juzData
                     ) else { return }
                     
-                    todayTask.append(task)
+                    todayTask.insert(task, at: 0)
                 } else {
                     if let lastTask {
                         guard let start = lastTask.startAyah, let completed = lastTask.completedEndAyah else { return }
@@ -155,8 +159,14 @@ final class HomePresenter {
                         todayTask.append(task)
                     }
                 }
+            } else {
+                todayTask = todayTask.sorted { lhs, rhs in
+                    lhs.type == .ziyadah &&
+                    rhs.type != .ziyadah
+                }
             }
             
+            onFetchTargetData?(targetData)
             onFetchAllTaskData?(allTaskData)
             onFetchTaskData?(todayTask)
         }
@@ -239,5 +249,16 @@ final class HomePresenter {
     
     func switchTabBar(_ tab: MainTabBarController.MainTab) {
         coordinator.switchToTab(tab)
+    }
+    
+    func createNewTarget(surahData: Quran.Surah.Response, callback: @escaping () -> Void) {
+        var targetModel = TargetModel()
+        targetModel.targetType = .surah
+        targetModel.targetNumber = surahData.number
+        targetModel.totalVerseCount = surahData.numberOfAyahs
+        
+        TargetRepository.createTarget(data: targetModel) { _ in
+            callback()
+        }
     }
 }

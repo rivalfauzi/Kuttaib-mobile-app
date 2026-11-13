@@ -56,6 +56,7 @@ final class ProfileViewController: BaseViewController {
         scrollView.addSubview(contentView)
         contentView.addSubview(mainVStack)
         
+        scrollView.showsVerticalScrollIndicator = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         contentView.translatesAutoresizingMaskIntoConstraints = false
         mainVStack.translatesAutoresizingMaskIntoConstraints = false
@@ -258,7 +259,21 @@ final class ProfileViewController: BaseViewController {
             case .success(let response):
                 presenter.activeTarget = response
                 
-                targetCard.configure(subtitle: "\(response?.targetType?.rawValue ?? "") \(response?.targetNumber ?? 0)", type: .target)
+                let allSurah = presenter.surah
+                
+                let targetSurah = allSurah.first {
+                    $0.number == response?.targetNumber
+                }
+                
+                var subtitle: String
+                
+                if let surahName = targetSurah?.englishName {
+                    subtitle = "Surah \(surahName)"
+                } else {
+                    subtitle = "Tidak ada target aktif"
+                }
+                
+                targetCard.configure(subtitle: subtitle, type: .target)
                 targetCard.hideSkeleton()
                 
             case .failure(let error):
@@ -338,8 +353,22 @@ final class ProfileViewController: BaseViewController {
             switch result {
             case .success(let response):
                 presenter.activeTarget = response
+
+                let allSurah = presenter.surah
                 
-                targetCard.configure(subtitle: "\(response?.targetType?.rawValue ?? "") \(response?.targetNumber ?? 0)", type: .target)
+                let targetSurah = allSurah.first {
+                    $0.number == response?.targetNumber
+                }
+                
+                var subtitle: String
+                
+                if let surahName = targetSurah?.englishName {
+                    subtitle = "Surah \(surahName)"
+                } else {
+                    subtitle = "Tidak ada target aktif"
+                }
+                
+                targetCard.configure(subtitle: "Surah \(subtitle)", type: .target)
             case .failure(let error):
                 print("Error: \(error)")
             }

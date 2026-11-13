@@ -56,6 +56,16 @@ final class MainTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "house.fill")
         )
         
+        let targetsNav = UINavigationController()
+        let targetsCoordinator = TargetsCoordinator(navigationController: targetsNav)
+        targetsCoordinator.start()
+        
+        targetsNav.tabBarItem = UITabBarItem(
+            title: "Target",
+            image: UIImage(systemName: "book"),
+            selectedImage: UIImage(systemName: "book.fill")
+        )
+        
         let profileNav = UINavigationController()
         let profileCoordinator = ProfileCoordinator(navigationController: profileNav)
         profileCoordinator.start()
@@ -68,6 +78,7 @@ final class MainTabBarController: UITabBarController {
 
         viewControllers = [
             homeNav,
+            targetsNav,
             profileNav
         ]
     }

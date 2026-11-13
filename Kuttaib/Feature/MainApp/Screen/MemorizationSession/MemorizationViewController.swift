@@ -313,12 +313,12 @@ final class MemorizationViewController: BaseViewController {
             nextButton.isEnabled = true
             skipButton.setColorEnable(true)
         } else if (stepIndex + 1) == completedEndAyah, case .done = status {
-            nextButton.updateTitle("Ulang Hafalan")
+            nextButton.updateTitle("Ulangi Ayat")
             nextButton.isEnabled = true
             skipButton.setColorEnable(true)
             skipButton.setTitle("Lanjut ke Ayat Berikutnya", for: .normal)
         } else if stepIndex < completedEndAyah {
-            nextButton.updateTitle("Ulang Hafalan")
+            nextButton.updateTitle("Ulangi Ayat")
             nextButton.isEnabled = true
             skipButton.setColorEnable(false)
         } else {
@@ -368,20 +368,47 @@ final class MemorizationViewController: BaseViewController {
     }
     
     private func showTargetDoneAlert() {
-        let alertCompletedTarget = TargetCompletedView()
-        
-        alertCompletedTarget.modalTransitionStyle = .crossDissolve
-        alertCompletedTarget.modalPresentationStyle = .overCurrentContext
-        
-        alertCompletedTarget.onContinue = {
+        presenter.updateTargetAndFetchSurah {[weak self] result in
+            guard let self, let previousSurah = presenter.surah else { return }
             
+            switch result {
+            case .success(let response):
+                let alertCompletedTarget = TargetCompletedView()
+                
+                let nextSurah = response.first {
+                    $0.number == previousSurah.number + 1
+                }
+                
+                if let nextSurah {
+                    alertCompletedTarget.setData(previous: previousSurah, next: nextSurah, userDailyTarget: presenter.userData.dailyVerseTarget)
+                    
+                    alertCompletedTarget.onContinue = {
+                        self.presenter.createNewTarget(surahData: nextSurah) { result in
+                            switch result {
+                            case .success(_):
+                                self.presenter.popView()
+                            case .failure(let error):
+                                print("Error: \(error)")
+                            }
+                        }
+                    }
+                } else {
+                    alertCompletedTarget.hideNextSession(previous: previousSurah)
+                }
+                
+                alertCompletedTarget.modalTransitionStyle = .crossDissolve
+                alertCompletedTarget.modalPresentationStyle = .overCurrentContext
+                
+                alertCompletedTarget.onFinish = {
+                    self.presenter.navigateToRootView()
+                }
+                
+                present(alertCompletedTarget, animated: false)
+                
+            case .failure(let error):
+                print("Error: \(error)")
+            }
         }
-        
-        alertCompletedTarget.onFinish = {
-            
-        }
-        
-        present(alertCompletedTarget, animated: false)
     }
     
     private func reloadCollectionView() {
@@ -425,7 +452,7 @@ final class MemorizationViewController: BaseViewController {
                         presenter.task = response
                         
                         if response.lastCompletedAyah == presenter.surah?.numberOfAyahs {
-                            
+                            showTargetDoneAlert()
                         } else if response.lastCompletedAyah == response.endAyah {
                             showAlertDoneTask(
                                 nextSurah: presenter.surah?.englishName ?? "",
@@ -451,9 +478,8 @@ final class MemorizationViewController: BaseViewController {
     @objc private func startMemorizeTapped() {
         switch presenter.viewState {
         case .learn:
-//            presenter.viewState = .record
-//            setupConditionalView()
-            showTargetDoneAlert()
+            presenter.viewState = .record
+            setupConditionalView()
         case .record:
             break
         case .done:

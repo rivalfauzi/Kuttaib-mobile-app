@@ -132,7 +132,7 @@ final class ProfileTargetCard: UIView {
             
             mainTarget.isHidden = false
             
-            mainTarget.configure(icon: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, iconBackground: .backgroundBlue, titleString: "Target Juz atau Surah", subtitleString: subtitle)
+            mainTarget.configure(icon: UIImage(systemName: "book.fill"), iconTintColor: .primaryBlue, iconBackground: .backgroundBlue, titleString: "Target Surah", subtitleString: subtitle)
         }
         
         

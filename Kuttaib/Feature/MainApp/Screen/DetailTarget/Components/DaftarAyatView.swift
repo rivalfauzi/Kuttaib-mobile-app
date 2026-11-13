@@ -34,6 +34,7 @@ final class DaftarAyatView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        guard window != nil else { return }
         updateTableHeight()
     }
 
@@ -96,9 +97,12 @@ final class DaftarAyatView: UIView {
         rebuildItems()
         tableView.hideSkeleton()
         tableView.reloadData()
+        
+        guard window != nil else { return }
 
-        DispatchQueue.main.async {
-            self.updateTableHeight()
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.window != nil else { return }
+            updateTableHeight()
         }
     }
     
@@ -123,10 +127,14 @@ final class DaftarAyatView: UIView {
     }
 
     private func updateTableHeight() {
-        guard !isLoading else { return }
+        guard !isLoading, window != nil, tableView.window != nil else { return }
         
         tableView.layoutIfNeeded()
-        tableHeightConstraint.constant = tableView.contentSize.height
+        let newHeight = tableView.contentSize.height
+        
+        if tableHeightConstraint.constant != newHeight {
+            tableHeightConstraint.constant = newHeight
+        }
     }
     
     private func handleTap(_ item: AyatItem) {
@@ -158,9 +166,7 @@ extension DaftarAyatView: UITableViewDataSource, UITableViewDelegate {
             )
 
             cell.tapAction = { [weak self] in
-                guard let self else { return }
-
-                guard let index = self.sections.firstIndex(where: {
+                guard let self, let index = self.sections.firstIndex(where: {
                     $0.id == section.id
                 }) else { return }
 

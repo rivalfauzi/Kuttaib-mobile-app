@@ -44,8 +44,8 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.contentMode = .scaleAspectFit
         
-        title.font = .systemFont(ofSize: 14, weight: .medium)
-        subtitle.font = .systemFont(ofSize: 18, weight: .semibold)
+        title.font = .systemFont(ofSize: 12, weight: .medium)
+        subtitle.font = .systemFont(ofSize: 16, weight: .semibold)
         subtitle.textColor = .black
         
         [title, subtitle].forEach {
@@ -67,7 +67,7 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         }
         
         mainHStack.axis = .horizontal
-        mainHStack.spacing = 16
+        mainHStack.spacing = 8
         mainHStack.alignment = .center
         mainHStack.distribution = .fill
         mainHStack.translatesAutoresizingMaskIntoConstraints = false

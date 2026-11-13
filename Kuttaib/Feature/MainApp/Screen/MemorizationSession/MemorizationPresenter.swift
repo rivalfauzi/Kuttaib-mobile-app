@@ -10,6 +10,7 @@ import UIKit
 final class MemorizationPresenter {
     let navigation: UINavigationController
     var task: TaskModel
+    let userData: UserModel
     let surah: Quran.Surah.Response?
     var ayahs: [Quran.Ayahs.Response] = []
     var allOfAyah: [Quran.Ayahs.Response] = []
@@ -21,14 +22,62 @@ final class MemorizationPresenter {
         case done
     }
     
-    init(task: TaskModel, surah: Quran.Surah.Response?, navigation: UINavigationController) {
+    init(task: TaskModel, userData: UserModel, surah: Quran.Surah.Response?, navigation: UINavigationController) {
         self.task = task
+        self.userData = userData
         self.surah = surah
         self.navigation = navigation
     }
     
     func fetch(callback: @escaping (Result<[Quran.Ayahs.Response], Error>) -> Void) {
         QuranRepository.fetchAyah(callback: callback)
+    }
+    
+    func updateTargetAndFetchSurah(callback: @escaping (Result<[Quran.Surah.Response], Error>) -> Void) {
+        let group = DispatchGroup()
+        var errorFlow: Bool = false
+        var errorData: Error?
+        task.status = .done
+        
+        group.enter()
+        TaskRepository.updateTask(data: task) {[weak self] result in
+            defer { group.leave() }
+            switch result {
+            case .success(let response):
+                self?.task = response
+            case .failure(let error):
+                errorFlow = true
+                errorData = error
+            }
+        }
+        
+        group.enter()
+        TargetRepository.doneTarget { result in
+            defer { group.leave() }
+            
+            if case .failure(let error) = result {
+                errorFlow = true
+                errorData = error
+            }
+        }
+        
+        group.notify(queue: .main) {
+            guard !errorFlow else {
+                callback(.failure(errorData!))
+                return
+            }
+            
+            QuranRepository.fetchSurah(callback: callback)
+        }
+    }
+    
+    func createNewTarget(surahData: Quran.Surah.Response, callback: @escaping (Result<TargetModel, Error>) -> Void) {
+        var targetModel = TargetModel()
+        targetModel.targetType = .surah
+        targetModel.targetNumber = surahData.number
+        targetModel.totalVerseCount = surahData.numberOfAyahs
+        
+        TargetRepository.createTarget(data: targetModel, callback: callback)
     }
     
     func getAyahsTask() {

@@ -13,6 +13,7 @@ final class ProfilePresenter {
     var activeTarget: TargetModel?
     var allUserTask: [TaskModel] = []
     var reminderData: ReminderSetting?
+    var surah: [Quran.Surah.Response] = []
     
     var onFetchUserData: ((Result<UserModel, Error>) -> Void)?
     var onGetActiveTarget: ((Result<TargetModel?, Error>) -> Void)?
@@ -39,9 +40,21 @@ final class ProfilePresenter {
     }
     
     func getActiveTarget() {
-        TargetRepository.getActiveTarget {[weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onGetActiveTarget?(result)
+        QuranRepository.fetchSurah {[weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success(let response):
+                surah = response
+                
+                TargetRepository.getActiveTarget {[weak self] result in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        self?.onGetActiveTarget?(result)
+                    }
+                }
+                
+            case .failure(let error):
+                onGetActiveTarget?(.failure(error))
             }
         }
     }

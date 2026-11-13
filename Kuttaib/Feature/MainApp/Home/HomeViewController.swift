@@ -61,6 +61,7 @@ final class HomeViewController: BaseViewController {
         scrollView.addSubview(contentView)
         contentView.addSubview(mainVStack)
         
+        scrollView.showsVerticalScrollIndicator = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         contentView.translatesAutoresizingMaskIntoConstraints = false
         mainVStack.translatesAutoresizingMaskIntoConstraints = false
@@ -144,25 +145,31 @@ final class HomeViewController: BaseViewController {
             }
         }
         
-        presenter.onFetchTargetData = {[weak self] result in
-            guard let self else { return }
+        presenter.onFetchTargetData = {[weak self] data in
+            guard let self, let surahsData = presenter.surahData else { return }
             
-            switch result {
-            case .success(let data):
-                guard let data else { return }
-                presenter.targetData = data
-                targetCard.setConfig(data)
-                targetCard.hideSkeleton()
-            case .failure(let error):
-                print(error)
+            if let data, let surah = surahsData.first(where: {
+                $0.number == data.targetNumber
+            }) {
+                targetCard.setConfig(data, surah: surah)
+            } else {
+                targetCard.setEmptyState()
             }
+            
+            targetCard.hideSkeleton()
         }
         
         presenter.onFetchTaskData = {[weak self] data in
             guard let self else { return }
             
-            self.taskSection.setDataTask(data, surahData: presenter.surahData)
-            self.recomenSection.setData(recomendationData)
+            if data.isEmpty {
+                taskSection.isHidden = true
+            } else {
+                taskSection.isHidden = false
+                taskSection.setDataTask(data, surahData: presenter.surahData)
+            }
+            
+            recomenSection.setData(recomendationData)
         }
         
         presenter.onFetchAllTaskData = {[weak self] data in
@@ -174,11 +181,11 @@ final class HomeViewController: BaseViewController {
     
     private func setupAction() {
         taskSection.onTappedButton = {[weak self] task, surah in
-            guard let self else { return }
+            guard let self, let user = presenter.userData else { return }
             
             switch task.type {
             case .ziyadah:
-                presenter.navigateTo(.memorizationSession(task: task, surah: surah))
+                presenter.navigateTo(.memorizationSession(task: task, user: user, surah: surah))
             case .murojaah:
                 presenter.navigateTo(.murojaahSession(task: task, surah: surah))
             default:
@@ -200,6 +207,39 @@ final class HomeViewController: BaseViewController {
             
             presenter.navigateTo(.targetDetail(user: user))
         }
+        
+        targetCard.onNewTarget = {[weak self] in
+            guard let self, let surahData = presenter.surahData else { return }
+            
+            let switchTargetBottomSheet = TargetPickerBottomSheet()
+            
+            switchTargetBottomSheet.setData(surahData)
+            switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
+            
+            switchTargetBottomSheet.didSelect = { item in
+                self.targetChange(item)
+            }
+            
+            if let presentation = switchTargetBottomSheet.sheetPresentationController {
+                presentation.detents = [.large()]
+                presentation.prefersGrabberVisible = false
+                
+                switchTargetBottomSheet.isModalInPresentation = true
+                self.present(switchTargetBottomSheet, animated: true)
+            }
+        }
+    }
+    
+    private func targetChange(_ item: Quran.Surah.Response) {
+        recomendationData = []
+        targetCard.showAnimatedGradientSkeleton()
+        taskSection.startLoading()
+        statisticSection.startLoading()
+        recomenSection.showAnimatedGradientSkeleton()
+        
+        presenter.createNewTarget(surahData: item) {[weak self] in
+            self?.presenter.initialService()
+        }
     }
 }
 
@@ -216,6 +256,9 @@ final class HomeHeroCard: UIView {
     let mainHStack = UIStackView()
     
     var onDetailTapped:(() -> Void)?
+    var onNewTarget: (() -> Void)?
+    
+    var isEmpty = false
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -237,8 +280,9 @@ final class HomeHeroCard: UIView {
         titleCard.textColor = .systemGray2
         titleCard.numberOfLines = 0
         
-        targetLabel.font = .systemFont(ofSize: 24, weight: .bold)
+        targetLabel.font = .systemFont(ofSize: 18, weight: .bold)
         targetLabel.textColor = .black
+        targetLabel.numberOfLines = 0
         
         descLabel.font = .systemFont(ofSize: 14, weight: .regular)
         descLabel.textColor = .systemGray2
@@ -272,7 +316,7 @@ final class HomeHeroCard: UIView {
         }
         
         mainHStack.axis = .horizontal
-        mainHStack.spacing = 24
+        mainHStack.spacing = 16
         mainHStack.alignment = .fill
         mainHStack.distribution = .fillEqually
         mainHStack.translatesAutoresizingMaskIntoConstraints = false
@@ -297,10 +341,10 @@ final class HomeHeroCard: UIView {
         detailButton.addTarget(self, action: #selector(onButtonTapped), for: .touchUpInside)
     }
     
-    func setConfig(_ data: TargetModel) {
+    func setConfig(_ data: TargetModel, surah: Quran.Surah.Response) {
         guard let completedVerseCount = data.completedVerseCount, let totalVerseCount = data.totalVerseCount else { return }
         
-        targetLabel.text = "\(data.targetType?.rawValue.capitalized ?? "") \(data.targetNumber ?? 0)"
+        targetLabel.text = "Surah \(surah.englishName)"
         descLabel.text = "\(completedVerseCount)/\(totalVerseCount) ayat"
         
         let percentage = CGFloat(completedVerseCount) / CGFloat(totalVerseCount)
@@ -308,10 +352,27 @@ final class HomeHeroCard: UIView {
         
         progressView.progress = percentage
         progressLabel.text = percentageText
+        detailButton.updateTitle("Lihat Detail")
+        
+        rightView.isHidden = false
+        isEmpty = false
+    }
+    
+    func setEmptyState() {
+        targetLabel.text = "Tidak Ada Target Aktif"
+        descLabel.text = "Pilih surah yang ingin kamu hafal untuk mulai mendapat tugas harian."
+        detailButton.updateTitle("Pilih Target")
+        
+        rightView.isHidden = true
+        isEmpty = true
     }
     
     @objc private func onButtonTapped() {
-        onDetailTapped?()
+        if isEmpty {
+            onNewTarget?()
+        } else {
+            onDetailTapped?()
+        }
     }
 }
 

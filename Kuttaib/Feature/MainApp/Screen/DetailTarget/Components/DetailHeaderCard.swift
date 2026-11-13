@@ -53,7 +53,7 @@ final class DetailHeaderCard: UIView {
         titleLabel.font = .boldSystemFont(ofSize: 14)
         titleLabel.textColor = .primaryGreen
         
-        latinName.font = .systemFont(ofSize: 28, weight: .bold)
+        latinName.font = .systemFont(ofSize: 24, weight: .bold)
         latinName.textColor = .black
         
         detailLabel.font = .systemFont(ofSize: 14)

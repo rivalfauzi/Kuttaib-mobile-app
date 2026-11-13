@@ -61,6 +61,7 @@ final class DetailTargetViewController: BaseViewController {
         contentView.translatesAutoresizingMaskIntoConstraints = false
         
         scrollView.addSubview(contentView)
+        scrollView.showsVerticalScrollIndicator = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         
         view.addSubview(scrollView)

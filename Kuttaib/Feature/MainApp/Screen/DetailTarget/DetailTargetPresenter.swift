@@ -8,7 +8,7 @@
 import UIKit
 
 protocol DetailTargetRouting: AnyObject {
-    func openTask(task: TaskModel, surah: Quran.Surah.Response?)
+    func openTask(task: TaskModel, user: UserModel, surah: Quran.Surah.Response?)
 }
 
 final class DetailTargetPresenter {
@@ -225,11 +225,11 @@ final class DetailTargetPresenter {
                 selectedTask = newGeneratedTask
             }
             
-            router?.openTask(task: selectedTask, surah: surahData)
+            router?.openTask(task: selectedTask, user: userData, surah: surahData)
         case .murojaahTask(let item):
             let generateTask = TaskModel(status: .notStart, surahNumber: surahData?.number, startAyah: item.number, endAyah: item.number, completedEndAyah: 0, type: .murojaah, taskDate: Date(), shouldDisplayOnDashboard: false)
             
-            router?.openTask(task: generateTask, surah: surahData)
+            router?.openTask(task: generateTask, user: userData, surah: surahData)
         }
     }
     
