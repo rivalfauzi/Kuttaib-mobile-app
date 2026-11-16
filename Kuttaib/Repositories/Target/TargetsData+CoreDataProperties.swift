@@ -16,6 +16,7 @@ extension TargetsData {
     @NSManaged public var id: UUID
     @NSManaged public var status: String?
     @NSManaged public var targetNumber: Int16
+    @NSManaged public var surahName: String?
     @NSManaged public var targetType: String?
     @NSManaged public var totalVerseCount: Int16
     @NSManaged public var completedVerseCount: Int16
@@ -29,6 +30,7 @@ extension TargetsData {
         return TargetModel(
             id: id,
             targetNumber: Int(targetNumber),
+            surahName: surahName,
             targetType: TargetType(rawValue: targetType ?? ""),
             totalVerseCount: Int(totalVerseCount),
             completedVerseCount: Int(completedVerseCount),

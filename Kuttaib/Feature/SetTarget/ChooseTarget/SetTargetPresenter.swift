@@ -147,6 +147,7 @@ final class SetTargetPresenter {
             
             targetModel.targetType = mainTarget.type
             targetModel.targetNumber = mainTarget.value
+            targetModel.surahName = mainTarget.name
             targetModel.totalVerseCount = totalAyat
 
             switch dailyTarget.type {

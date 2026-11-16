@@ -31,6 +31,7 @@ enum TargetRepository {
             target.id = UUID()
             target.targetType = data.targetType?.rawValue
             target.targetNumber = Int16(data.targetNumber ?? 0)
+            target.surahName = data.surahName
 
             target.totalVerseCount = Int16(data.totalVerseCount ?? 0)
             target.completedVerseCount = 0
@@ -69,35 +70,51 @@ enum TargetRepository {
     
     static func switchTarget(data: TargetModel, callback: @escaping (Result<TargetModel?, Error>) -> Void) {
         let context = CoreDataManager.shared.context
-        let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
-        
-        request.predicate = NSPredicate(
-            format: "status == %@",
-            TargetStatus.active.rawValue
-        )
-        
-        request.fetchLimit = 1
-        
+
         do {
-            let activeTarget = try context.fetch(request).first
-            activeTarget?.status = TargetStatus.inActive.rawValue
-            
-            let newTarget = TargetsData(context: context)
-            
-            newTarget.id = UUID()
-            newTarget.targetType = data.targetType?.rawValue
-            newTarget.targetNumber = Int16(data.targetNumber ?? 0)
-            
-            newTarget.totalVerseCount = Int16(data.totalVerseCount ?? 0)
-            newTarget.completedVerseCount = 0
-            
-            newTarget.status = TargetStatus.active.rawValue
-            newTarget.createdAt = Date()
-            
+            let activeRequest: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
+            activeRequest.predicate = NSPredicate(
+                format: "status == %@",
+                TargetStatus.active.rawValue
+            )
+            activeRequest.fetchLimit = 1
+
+            try context.fetch(activeRequest)
+                .first?
+                .setValue(TargetStatus.inActive.rawValue, forKey: "status")
+
+            var target: TargetsData?
+
+            if let id = data.id {
+                let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
+                request.predicate = NSPredicate(
+                    format: "id == %@",
+                    id.uuidString
+                )
+                request.fetchLimit = 1
+
+                target = try context.fetch(request).first
+            }
+
+            if target == nil {
+                target = TargetsData(context: context)
+
+                target?.id = data.id ?? UUID()
+                target?.targetType = data.targetType?.rawValue
+                target?.targetNumber = Int16(data.targetNumber ?? 0)
+                target?.surahName = data.surahName
+                target?.totalVerseCount = Int16(data.totalVerseCount ?? 0)
+                target?.createdAt = data.createdAt ?? Date()
+            }
+
+            target?.completedVerseCount = Int16(data.completedVerseCount ?? 0)
+            target?.completedAt = data.completedAt
+            target?.status = TargetStatus.active.rawValue
+
             try context.save()
-            
-            callback(.success(newTarget.toModel()))
-            
+
+            callback(.success(target?.toModel()))
+
         } catch {
             callback(.failure(error))
         }
@@ -117,6 +134,7 @@ enum TargetRepository {
         do {
             let target = try context.fetch(request).first
             target?.status = TargetStatus.done.rawValue
+            target?.completedAt = Date()
             try context.save()
             callback(.success(target?.toModel()))
         } catch {
@@ -135,6 +153,26 @@ enum TargetRepository {
             }
             
             callback(.success(targets))
+        } catch {
+            callback(.failure(error))
+        }
+    }
+    
+    static func getTargetByNumber(number: Int, callback: @escaping(Result<TargetModel?, Error>) -> Void) {
+        let context = CoreDataManager.shared.context
+        let request: NSFetchRequest<TargetsData> = TargetsData.fetchRequest()
+        
+        request.predicate = NSPredicate(
+            format: "targetNumber == %d",
+            number
+        )
+        
+        request.fetchLimit = 1
+        
+        do {
+            let target = try context.fetch(request).first
+            
+            callback(.success(target?.toModel()))
         } catch {
             callback(.failure(error))
         }

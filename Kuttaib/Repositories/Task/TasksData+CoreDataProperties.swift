@@ -16,6 +16,7 @@ extension TasksData {
     @NSManaged public var id: UUID
     @NSManaged public var status: String?
     @NSManaged public var surahNumber: Int16
+    @NSManaged public var surahName: String
     @NSManaged public var startAyah: Int16
     @NSManaged public var endAyah: Int16
     @NSManaged public var completedEndAyah: Int16
@@ -29,6 +30,7 @@ extension TasksData {
             id: id,
             status: TaskStatus(rawValue: status ?? ""),
             surahNumber: Int(surahNumber),
+            surahName: surahName,
             startAyah: Int(startAyah),
             endAyah: Int(endAyah),
             completedEndAyah: Int(completedEndAyah),

@@ -12,7 +12,7 @@ final class HomeCoordinator {
     
     enum Navigate {
         case memorizationSession(task: TaskModel, user: UserModel, surah: Quran.Surah.Response?)
-        case targetDetail(user: UserModel)
+        case targetDetail(user: UserModel, target: TargetModel)
         case murojaahSession(task: TaskModel, surah: Quran.Surah.Response?)
     }
     
@@ -35,8 +35,8 @@ final class HomeCoordinator {
             vc.hidesBottomBarWhenPushed = true
             
             navigationController.pushViewController(vc, animated: true)
-        case .targetDetail(let user):
-            let presenter = DetailTargetPresenter(user: user)
+        case .targetDetail(let user, let target):
+            let presenter = DetailTargetPresenter(user: user, targetData: target)
             presenter.router = self
             
             let vc = DetailTargetViewController(presenter: presenter)

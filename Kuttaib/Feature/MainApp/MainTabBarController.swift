@@ -12,7 +12,8 @@ final class MainTabBarController: UITabBarController {
     
     enum MainTab: Int {
         case home = 0
-        case profile = 1
+        case target = 1
+        case profile = 2
     }
     
     init(coordinator: MainAppCoordinator) {

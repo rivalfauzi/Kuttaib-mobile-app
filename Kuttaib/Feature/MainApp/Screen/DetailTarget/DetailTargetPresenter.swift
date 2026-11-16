@@ -12,7 +12,7 @@ protocol DetailTargetRouting: AnyObject {
 }
 
 final class DetailTargetPresenter {
-    var targetData: TargetModel?
+    let targetData: TargetModel
     var surahData: Quran.Surah.Response?
     var userData: UserModel
     var newTask: TaskModel?
@@ -26,8 +26,9 @@ final class DetailTargetPresenter {
         case murojaahTask(AyatItem)
     }
     
-    init(user: UserModel) {
+    init(user: UserModel, targetData: TargetModel) {
         self.userData = user
+        self.targetData = targetData
     }
     
     func fetchData() {
@@ -49,30 +50,13 @@ final class DetailTargetPresenter {
             }
         }
         
-        group.enter()
-        TargetRepository.getActiveTarget {[weak self] result in
-            guard let self else { return }
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                switch result {
-                case .success(let response):
-                    self.targetData = response
-                case .failure(let error):
-                    errorFlow = true
-                    print("Error: \(error)")
-                }
-                
-                group.leave()
-            }
-        }
-        
         group.notify(queue: .main) { [weak self] in
-            guard !errorFlow, let self, let targetData else {
+            guard !errorFlow, let self else {
                 return
             }
             
             let targetSurahData = listSurah.first {
-                $0.number == targetData.targetNumber
+                $0.number == self.targetData.targetNumber
             }
             
             guard let targetSurahData else { return }
@@ -89,14 +73,14 @@ final class DetailTargetPresenter {
         let nextAyah = completedVerseCount + 1
         
         let todayTask = updateTasks.first {
-            guard let taskDate = $0.taskDate else {
+            guard let taskDate = $0.taskDate, targetData.status == .active else {
                 return false
             }
             
             return $0.type == .ziyadah && Calendar.current.isDateInToday(taskDate)
         }
         
-        if todayTask == nil {
+        if todayTask == nil, case .active = targetData.status {
             let newTask = generateNewTask(updateTasks)
             updateTasks.append(newTask)
         }
@@ -148,7 +132,7 @@ final class DetailTargetPresenter {
 
             if ayah <= completedVerseCount {
                 status = .completed
-            } else if ayah == nextAyah {
+            } else if ayah == nextAyah, case .active = targetData.status {
                 status = .current
             } else {
                 status = .upcoming
@@ -175,7 +159,7 @@ final class DetailTargetPresenter {
         let calendar = Calendar.current
 
         for task in tasks {
-            guard task.type == .ziyadah, let taskDate = task.taskDate, calendar.isDateInToday(taskDate), let start = task.startAyah, let end = task.endAyah, start <= end else {
+            guard task.type == .ziyadah, let taskDate = task.taskDate, calendar.isDateInToday(taskDate), let start = task.startAyah, let end = task.endAyah, start <= end, targetData.status == .active else {
                 continue
             }
 
@@ -203,7 +187,7 @@ final class DetailTargetPresenter {
     func navigateTo(_ view: Routing) {
         switch view {
         case .ziyadahTask:
-            let todayTask = targetData?.tasks?.first {
+            let todayTask = targetData.tasks?.first {
                 guard let taskDate = $0.taskDate else { return false }
                 return $0.type == .ziyadah && Calendar.current.isDateInToday(taskDate)
             }
@@ -220,7 +204,7 @@ final class DetailTargetPresenter {
             } else if let newTask {
                 selectedTask = newTask
             } else {
-                guard let tasks = targetData?.tasks else { return }
+                guard let tasks = targetData.tasks else { return }
                 let newGeneratedTask = generateNewTask(tasks)
                 selectedTask = newGeneratedTask
             }

@@ -11,6 +11,7 @@ struct TaskModel {
     var id: UUID?
     var status: TaskStatus?
     var surahNumber: Int?
+    var surahName: String?
     var startAyah: Int?
     var endAyah: Int?
     var completedEndAyah: Int?

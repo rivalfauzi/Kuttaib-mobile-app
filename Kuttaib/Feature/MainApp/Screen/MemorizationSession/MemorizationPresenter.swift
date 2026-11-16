@@ -76,6 +76,7 @@ final class MemorizationPresenter {
         targetModel.targetType = .surah
         targetModel.targetNumber = surahData.number
         targetModel.totalVerseCount = surahData.numberOfAyahs
+        targetModel.surahName = surahData.englishName
         
         TargetRepository.createTarget(data: targetModel, callback: callback)
     }

@@ -40,21 +40,9 @@ final class ProfilePresenter {
     }
     
     func getActiveTarget() {
-        QuranRepository.fetchSurah {[weak self] result in
-            guard let self else { return }
-            
-            switch result {
-            case .success(let response):
-                surah = response
-                
-                TargetRepository.getActiveTarget {[weak self] result in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                        self?.onGetActiveTarget?(result)
-                    }
-                }
-                
-            case .failure(let error):
-                onGetActiveTarget?(.failure(error))
+        TargetRepository.getActiveTarget {[weak self] result in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self?.onGetActiveTarget?(result)
             }
         }
     }
@@ -172,8 +160,6 @@ final class ProfilePresenter {
     }
     
     func switchTarget(_ data: TargetModel, callback: @escaping (Result<TargetModel?, Error>) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            TargetRepository.switchTarget(data: data, callback: callback)
-        }
+        TargetRepository.switchTarget(data: data, callback: callback)
     }
 }

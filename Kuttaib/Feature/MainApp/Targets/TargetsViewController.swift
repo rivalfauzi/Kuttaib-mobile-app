@@ -16,6 +16,8 @@ final class TargetsViewController: BaseViewController {
     private let mainVStack = UIStackView()
     private let titleScreen = UILabel()
     private let activeTarget = ActiveTargetsCardView()
+    private let nonActiveTarget = NonActiveTargetsCardView()
+    private let doneTarget = NonActiveTargetsCardView()
     
     init(presenter: TargetsPresenter) {
         self.presenter = presenter
@@ -58,7 +60,7 @@ final class TargetsViewController: BaseViewController {
         titleScreen.textColor = .black
         titleScreen.textAlignment = .left
         
-        [titleScreen, activeTarget].forEach {
+        [titleScreen, activeTarget, nonActiveTarget, doneTarget].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             mainVStack.addArrangedSubview($0)
         }
@@ -108,11 +110,10 @@ final class TargetsViewController: BaseViewController {
                     $0.status == .done
                 }
                 
-                let surah = presenter.surah.first {
-                    $0.number == activeData?.targetNumber
-                }
+                activeTarget.configure(presenter.activeTarget)
                 
-                activeTarget.configure(presenter.activeTarget, surah: surah)
+                nonActiveTarget.configure(title: "Nonaktif", data: presenter.inActiveTargets, targetStatus: .inActive)
+                doneTarget.configure(title: "Selesai", data: presenter.doneTargets, targetStatus: .done)
                 
             case .failure(let error):
                 print("Error: \(error)")
@@ -122,28 +123,86 @@ final class TargetsViewController: BaseViewController {
     
     private func setupAction() {
         activeTarget.onDetailButtonTapped = {[weak self] in
-            guard let self, let userData = presenter.userData else { return }
-            presenter.navigateTo(.targetDetail(user: userData))
+            guard let self, let userData = presenter.userData, let activeTarget = presenter.activeTarget else { return }
+            presenter.navigateTo(.targetDetail(user: userData, target: activeTarget))
         }
         
         activeTarget.onNewTargetTapped = {[weak self] in
-            guard let self, !presenter.surah.isEmpty else { return }
-            let switchTargetBottomSheet = TargetPickerBottomSheet()
+            guard let self else { return }
             
-            switchTargetBottomSheet.setData(presenter.surah)
-            switchTargetBottomSheet.userDailyTarget = presenter.userData?.dailyVerseTarget
+            presenter.fetchSurah { result in
+                switch result {
+                case .success(let response):
+                    guard !response.isEmpty else { return }
+                    
+                    let switchTargetBottomSheet = TargetPickerBottomSheet()
+                    
+                    switchTargetBottomSheet.setData(response)
+                    switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
+                    
+                    switchTargetBottomSheet.didSelect = { target in
+                        self.dismiss(animated: true) {
+                            self.saveTarget(target: target)
+                        }
+                    }
+                    
+                    if let presentation = switchTargetBottomSheet.sheetPresentationController {
+                        presentation.detents = [.large()]
+                        presentation.prefersGrabberVisible = false
+                        
+                        switchTargetBottomSheet.isModalInPresentation = true
+                        self.present(switchTargetBottomSheet, animated: true)
+                    }
+                    
+                case .failure(let error):
+                    print("Error: \(error)")
+                }
+            }
+        }
+        
+        nonActiveTarget.onDetailTapped = {[weak self] target in
+            guard let self else { return }
             
-            switchTargetBottomSheet.didSelect = { item in
-                
+            let bottomSheet = BottomSheetViewController()
+            let content = TargetsChangeBottomSheet()
+            content.setTitle(target.surahName ?? "")
+            
+            content.onDetailTapped = {
+                bottomSheet.dismissSheet()
+                self.nonActiveDetail(target)
             }
             
-            if let presentation = switchTargetBottomSheet.sheetPresentationController {
-                presentation.detents = [.large()]
-                presentation.prefersGrabberVisible = false
-                
-                switchTargetBottomSheet.isModalInPresentation = true
-                self.present(switchTargetBottomSheet, animated: true)
+            content.onContinueTapped = {
+                bottomSheet.dismissSheet()
+                self.nonActiveContinue(target)
             }
+            
+            bottomSheet.setContent(content)
+            
+            bottomSheet.modalPresentationStyle = .overFullScreen
+            bottomSheet.modalTransitionStyle = .crossDissolve
+            
+            present(bottomSheet, animated: false)
+        }
+        
+        doneTarget.onDetailTapped = {[weak self] target in
+            guard let self, let userData = presenter.userData else { return }
+            presenter.navigateTo(.targetDetail(user: userData, target: target))
+        }
+    }
+    
+    private func nonActiveContinue(_ data: TargetModel) {
+        print("Ubah menjadi aktif")
+    }
+    
+    private func nonActiveDetail(_ data: TargetModel) {
+        guard let userData = presenter.userData else { return }
+        presenter.navigateTo(.targetDetail(user: userData, target: data))
+    }
+    
+    private func saveTarget(target: TargetModel) {
+        presenter.createNewTarget(targetModel: target) {[weak self] in
+            self?.fetch()
         }
     }
 }

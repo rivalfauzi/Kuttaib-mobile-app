@@ -11,7 +11,9 @@ final class TargetsCoordinator {
     let navigationController: UINavigationController
     
     enum Navigate {
-        case targetDetail(user: UserModel)
+        case memorizationSession(task: TaskModel, user: UserModel, surah: Quran.Surah.Response?)
+        case murojaahSession(task: TaskModel, surah: Quran.Surah.Response?)
+        case targetDetail(user: UserModel, target: TargetModel)
     }
     
     init(navigationController: UINavigationController) {
@@ -27,11 +29,22 @@ final class TargetsCoordinator {
     
     func navigateTo(_ navigate: Navigate) {
         switch navigate {
-        case .targetDetail(let user):
-            let presenter = DetailTargetPresenter(user: user)
+        case .memorizationSession(let task, let user,  let surah):
+            let presenter = MemorizationPresenter(task: task, userData: user,  surah: surah, navigation: navigationController)
+            let vc = MemorizationViewController(presenter: presenter)
+            vc.hidesBottomBarWhenPushed = true
+            
+            navigationController.pushViewController(vc, animated: true)
+        case .targetDetail(let user, let target):
+            let presenter = DetailTargetPresenter(user: user, targetData: target)
             presenter.router = self
             
             let vc = DetailTargetViewController(presenter: presenter)
+            vc.hidesBottomBarWhenPushed = true
+            navigationController.pushViewController(vc, animated: true)
+        case .murojaahSession(let task, let surah):
+            let presenter = MurojaahSessionPresenter(task: task, surah: surah)
+            let vc = MurojaahSessionViewController(presenter: presenter)
             vc.hidesBottomBarWhenPushed = true
             navigationController.pushViewController(vc, animated: true)
         }
@@ -42,9 +55,9 @@ extension TargetsCoordinator: DetailTargetRouting {
     func openTask(task: TaskModel, user: UserModel, surah: Quran.Surah.Response?) {
         switch task.type {
         case .ziyadah:
-            break
+            navigateTo(.memorizationSession(task: task, user: user, surah: surah))
         case .murojaah:
-            break
+            navigateTo(.murojaahSession(task: task, surah: surah))
         default:
             break
         }

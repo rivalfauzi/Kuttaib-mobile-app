@@ -112,7 +112,9 @@ final class SetTargetContainerViewController: BaseViewController {
         sheet.didSelect = { [weak self] item in
             guard let self else { return }
             
-            setDataStore(.main, data: .init(title: item.englishName, subtitle: "", icon: "", populer: false, value: item.number, type: TargetType.surah.rawValue))
+            dismiss(animated: true) {
+                self.setDataStore(.main, data: .init(title: item.surahName ?? "", subtitle: "", icon: "", populer: false, value: item.targetNumber ?? 0, type: TargetType.surah.rawValue))
+            }
         }
         
         sheet.onClose = {[weak self] in

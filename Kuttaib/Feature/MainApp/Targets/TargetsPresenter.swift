@@ -12,7 +12,6 @@ final class TargetsPresenter {
     var activeTarget: TargetModel?
     var inActiveTargets: [TargetModel] = []
     var doneTargets: [TargetModel] = []
-    var surah: [Quran.Surah.Response] = []
     var userData: UserModel?
     
     init(coordinator: TargetsCoordinator) {
@@ -34,24 +33,29 @@ final class TargetsPresenter {
             }
         }
         
-        group.enter()
-        QuranRepository.fetchSurah {[weak self] result in
-            defer { group.leave() }
-            
-            switch result {
-            case .success(let response):
-                self?.surah = response
-            case .failure(let error):
-                print("Error: \(error)")
-            }
-        }
-        
         group.notify(queue: .main) {
             TargetRepository.getAllTarget(callback: callback)
         }
     }
     
+    func fetchSurah(callback: @escaping(Result<[Quran.Surah.Response], Error>) -> Void) {
+        QuranRepository.fetchSurah(callback: callback)
+    }
+    
     func navigateTo(_ navigate: TargetsCoordinator.Navigate) {
         coordinator.navigateTo(navigate)
+    }
+    
+    func createNewTarget(targetModel: TargetModel, callback: @escaping () -> Void) {
+        TargetRepository.switchTarget(data: targetModel) {[weak self] result in
+            guard let self else { return }
+            
+            switch result {
+            case .success(let response):
+                callback()
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
     }
 }

@@ -10,6 +10,7 @@ import Foundation
 struct TargetModel {
     var id: UUID?
     var targetNumber: Int?
+    var surahName: String?
     var targetType: TargetType?
     var totalVerseCount: Int?
     var completedVerseCount: Int?

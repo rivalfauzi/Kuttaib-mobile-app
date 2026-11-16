@@ -167,11 +167,11 @@ final class ActiveTargetsCardView: UIView {
         emptyButton.addTarget(self, action: #selector(onNewTargetTap), for: .touchUpInside)
     }
     
-    func configure(_ data: TargetModel?, surah: Quran.Surah.Response? = nil) {
+    func configure(_ data: TargetModel?) {
         if let data {
             contentContainer.isHidden = false
             emptyContainer.isHidden = true
-            targetTitle.text = surah?.englishName
+            targetTitle.text = data.surahName
             contentView.layer.borderColor = UIColor.primaryGreen.cgColor
             contentView.backgroundColor = .backgroundGreen.withAlphaComponent(0.2)
             

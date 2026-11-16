@@ -118,12 +118,13 @@ final class HomePresenter {
                         
                         todayTask.append(task)
                     } else if case .murojaah = type {
-                        guard let surahNo = lastTask?.surahNumber, let start = lastTask?.startAyah, let completed = lastTask?.completedEndAyah else { return }
+                        guard let surahNo = lastTask?.surahNumber, let start = lastTask?.startAyah, let completed = lastTask?.completedEndAyah, let surahName = lastTask?.surahName else { return }
                         
                         let task = TaskModel(
                             id: nil,
                             status: .notStart,
                             surahNumber: surahNo,
+                            surahName: surahName,
                             startAyah: start,
                             endAyah: start + completed - 1,
                             completedEndAyah: 0,
@@ -142,22 +143,21 @@ final class HomePresenter {
                     ) else { return }
                     
                     todayTask.insert(task, at: 0)
-                } else {
-                    if let lastTask {
-                        guard let start = lastTask.startAyah, let completed = lastTask.completedEndAyah else { return }
-                        
-                        let task = TaskModel(
-                            status: .notStart,
-                            surahNumber: lastTask.surahNumber,
-                            startAyah: start,
-                            endAyah: start + completed - 1,
-                            completedEndAyah: 0,
-                            type: .murojaah,
-                            taskDate: Date()
-                        )
-                        
-                        todayTask.append(task)
-                    }
+                } else if let lastTask {
+                    guard let start = lastTask.startAyah, let completed = lastTask.completedEndAyah else { return }
+                    
+                    let task = TaskModel(
+                        status: .notStart,
+                        surahNumber: lastTask.surahNumber,
+                        surahName: lastTask.surahName,
+                        startAyah: start,
+                        endAyah: start + completed - 1,
+                        completedEndAyah: 0,
+                        type: .murojaah,
+                        taskDate: Date()
+                    )
+                    
+                    todayTask.append(task)
                 }
             } else {
                 todayTask = todayTask.sorted { lhs, rhs in
@@ -228,6 +228,7 @@ final class HomePresenter {
             }
             
             newTask.surahNumber = surahData?.number
+            newTask.surahName = surahData?.englishName
             var startAyah = 1
             
             if let lastTask, let taskStart = lastTask.startAyah, let completeAyah = lastTask.completedEndAyah  {
@@ -251,13 +252,8 @@ final class HomePresenter {
         coordinator.switchToTab(tab)
     }
     
-    func createNewTarget(surahData: Quran.Surah.Response, callback: @escaping () -> Void) {
-        var targetModel = TargetModel()
-        targetModel.targetType = .surah
-        targetModel.targetNumber = surahData.number
-        targetModel.totalVerseCount = surahData.numberOfAyahs
-        
-        TargetRepository.createTarget(data: targetModel) { _ in
+    func createNewTarget(targetModel: TargetModel, callback: @escaping () -> Void) {
+        TargetRepository.switchTarget(data: targetModel) { _ in
             callback()
         }
     }

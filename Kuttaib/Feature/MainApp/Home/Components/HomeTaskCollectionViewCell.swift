@@ -89,7 +89,7 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
         rightButton.addTarget(self, action: #selector(onButtonTapped), for: .touchUpInside)
     }
     
-    func setCofigure(_ item: TaskModel, surahName: String) {
+    func setCofigure(_ item: TaskModel) {
         switch item.type {
         case .ziyadah:
             title.text = "Ziyadah"
@@ -105,7 +105,7 @@ final class HomeTaskCollectionViewCell: UICollectionViewCell {
             break
         }
         
-        subtitle.text = "\(surahName) \(item.startAyah ?? 0) - \(item.endAyah ?? 0)"
+        subtitle.text = "\(item.surahName ?? "") \(item.startAyah ?? 0) - \(item.endAyah ?? 0)"
         
         switch item.status {
         case .notStart:

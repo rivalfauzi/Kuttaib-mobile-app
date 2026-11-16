@@ -166,8 +166,10 @@ final class ProfileViewController: BaseViewController {
                         switchTargetBottomSheet.setData(response, selectedNumber: self.presenter.activeTarget?.targetNumber)
                         switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
                         
-                        switchTargetBottomSheet.didSelect = { item in
-                            self.targetChange(item)
+                        switchTargetBottomSheet.didSelect = { target in
+                            self.dismiss(animated: true) {
+                                self.targetChange(target)
+                            }
                         }
                         
                         if let presentation = switchTargetBottomSheet.sheetPresentationController {
@@ -259,15 +261,9 @@ final class ProfileViewController: BaseViewController {
             case .success(let response):
                 presenter.activeTarget = response
                 
-                let allSurah = presenter.surah
-                
-                let targetSurah = allSurah.first {
-                    $0.number == response?.targetNumber
-                }
-                
                 var subtitle: String
                 
-                if let surahName = targetSurah?.englishName {
+                if let surahName = response?.surahName {
                     subtitle = "Surah \(surahName)"
                 } else {
                     subtitle = "Tidak ada target aktif"
@@ -338,42 +334,24 @@ final class ProfileViewController: BaseViewController {
         present(alert, animated: true)
     }
     
-    private func targetChange(_ item: Quran.Surah.Response) {
-        targetCard.showAnimatedGradientSkeleton()
-        
-        let newTarget = TargetModel(
-            targetNumber: item.number,
-            targetType: .surah,
-            totalVerseCount: item.numberOfAyahs
-        )
-        
+    private func targetChange(_ newTarget: TargetModel) {
         presenter.switchTarget(newTarget) {[weak self] result in
-            guard let self else { return }
-            
             switch result {
             case .success(let response):
-                presenter.activeTarget = response
-
-                let allSurah = presenter.surah
-                
-                let targetSurah = allSurah.first {
-                    $0.number == response?.targetNumber
-                }
+                self?.presenter.activeTarget = response
                 
                 var subtitle: String
                 
-                if let surahName = targetSurah?.englishName {
+                if let surahName = response?.surahName {
                     subtitle = "Surah \(surahName)"
                 } else {
                     subtitle = "Tidak ada target aktif"
                 }
                 
-                targetCard.configure(subtitle: "Surah \(subtitle)", type: .target)
+                self?.targetCard.configure(subtitle: "\(subtitle)", type: .target)
             case .failure(let error):
                 print("Error: \(error)")
             }
-            
-            targetCard.hideSkeleton()
         }
     }
 }

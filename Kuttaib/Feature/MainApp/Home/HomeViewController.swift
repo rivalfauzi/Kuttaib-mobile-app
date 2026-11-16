@@ -146,12 +146,10 @@ final class HomeViewController: BaseViewController {
         }
         
         presenter.onFetchTargetData = {[weak self] data in
-            guard let self, let surahsData = presenter.surahData else { return }
+            guard let self else { return }
             
-            if let data, let surah = surahsData.first(where: {
-                $0.number == data.targetNumber
-            }) {
-                targetCard.setConfig(data, surah: surah)
+            if let data {
+                targetCard.setConfig(data)
             } else {
                 targetCard.setEmptyState()
             }
@@ -203,9 +201,9 @@ final class HomeViewController: BaseViewController {
         }
         
         targetCard.onDetailTapped = {[weak self] in
-            guard let self, let user = presenter.userData else { return }
+            guard let self, let user = presenter.userData, let targetData = presenter.targetData else { return }
             
-            presenter.navigateTo(.targetDetail(user: user))
+            presenter.navigateTo(.targetDetail(user: user, target: targetData))
         }
         
         targetCard.onNewTarget = {[weak self] in
@@ -216,8 +214,10 @@ final class HomeViewController: BaseViewController {
             switchTargetBottomSheet.setData(surahData)
             switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
             
-            switchTargetBottomSheet.didSelect = { item in
-                self.targetChange(item)
+            switchTargetBottomSheet.didSelect = { target in
+                self.dismiss(animated: true) {
+                    self.targetChange(target)
+                }
             }
             
             if let presentation = switchTargetBottomSheet.sheetPresentationController {
@@ -230,14 +230,14 @@ final class HomeViewController: BaseViewController {
         }
     }
     
-    private func targetChange(_ item: Quran.Surah.Response) {
+    private func targetChange(_ target: TargetModel) {
         recomendationData = []
         targetCard.showAnimatedGradientSkeleton()
         taskSection.startLoading()
         statisticSection.startLoading()
         recomenSection.showAnimatedGradientSkeleton()
         
-        presenter.createNewTarget(surahData: item) {[weak self] in
+        presenter.createNewTarget(targetModel: target) {[weak self] in
             self?.presenter.initialService()
         }
     }
@@ -341,10 +341,10 @@ final class HomeHeroCard: UIView {
         detailButton.addTarget(self, action: #selector(onButtonTapped), for: .touchUpInside)
     }
     
-    func setConfig(_ data: TargetModel, surah: Quran.Surah.Response) {
+    func setConfig(_ data: TargetModel) {
         guard let completedVerseCount = data.completedVerseCount, let totalVerseCount = data.totalVerseCount else { return }
         
-        targetLabel.text = "Surah \(surah.englishName)"
+        targetLabel.text = "Surah \(data.surahName ?? "")"
         descLabel.text = "\(completedVerseCount)/\(totalVerseCount) ayat"
         
         let percentage = CGFloat(completedVerseCount) / CGFloat(totalVerseCount)
@@ -463,7 +463,7 @@ final class TaskSection: UIView, UICollectionViewDelegate, UICollectionViewDataS
             self?.onTappedButton?(taskData, surah)
         }
         
-        cell.setCofigure(taskData, surahName: surah?.englishName ?? "")
+        cell.setCofigure(taskData)
         
         return cell
     }
