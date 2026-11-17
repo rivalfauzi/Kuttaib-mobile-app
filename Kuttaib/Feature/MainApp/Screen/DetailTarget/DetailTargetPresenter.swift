@@ -12,7 +12,7 @@ protocol DetailTargetRouting: AnyObject {
 }
 
 final class DetailTargetPresenter {
-    let targetData: TargetModel
+    var targetData: TargetModel
     var surahData: Quran.Surah.Response?
     var userData: UserModel
     var newTask: TaskModel?
@@ -32,34 +32,42 @@ final class DetailTargetPresenter {
     }
     
     func fetchData() {
+        guard let targetNumber = targetData.targetNumber else { return }
         let group = DispatchGroup()
         var listSurah: [Quran.Surah.Response] = []
         var errorFlow: Bool = false
         
         group.enter()
         QuranRepository.fetchSurah { result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                switch result {
-                case .success(let response):
-                    listSurah = response
-                case .failure(let error):
-                    errorFlow = true
-                    print("Error: \(error)")
-                }
-                group.leave()
+            defer { group.leave() }
+            
+            switch result {
+            case .success(let response):
+                listSurah = response
+            case .failure(let error):
+                errorFlow = true
+                print("Error: \(error)")
+            }
+        }
+        
+        group.enter()
+        TargetRepository.getTargetByNumber(number: targetNumber) {[weak self] result in
+            defer { group.leave() }
+            
+            switch result {
+            case .success(let response):
+                guard let response else { return }
+                self?.targetData = response
+            case .failure(let error):
+                errorFlow = true
+                print("Error: \(error)")
             }
         }
         
         group.notify(queue: .main) { [weak self] in
-            guard !errorFlow, let self else {
-                return
-            }
-            
-            let targetSurahData = listSurah.first {
-                $0.number == self.targetData.targetNumber
-            }
-            
-            guard let targetSurahData else { return }
+            guard !errorFlow, let self, let targetSurahData = listSurah.first(where: {
+                $0.number == targetNumber
+            }) else { return }
             
             surahData = targetSurahData
             self.onGetData?()
@@ -235,6 +243,7 @@ final class DetailTargetPresenter {
         newTask.type = .ziyadah
         newTask.taskDate = Date()
         newTask.surahNumber = surahData?.number
+        newTask.surahName = surahData?.englishName
         newTask.shouldDisplayOnDashboard = true
         
         var startAyah = 1

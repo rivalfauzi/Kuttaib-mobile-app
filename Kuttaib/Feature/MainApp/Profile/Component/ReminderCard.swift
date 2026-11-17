@@ -23,6 +23,10 @@ final class ReminderCard: UIView {
     private let reminderDays = ReminderDaysView()
     
     var onNeedNotificationPermission: (() -> Void)?
+    var onChangeReminder: ((ReminderSetting) -> Void)?
+    var updateReminder: ((ReminderSetting) -> Void)?
+    
+    var reminderData: ReminderSetting?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -106,12 +110,18 @@ final class ReminderCard: UIView {
             separator.heightAnchor.constraint(equalToConstant: 1)
         ])
         
-        timeContainer.configure("5:30")
-        timeContainer.onButtonTapped = {
-            print("ubah pengingat")
-        }
-        
         reminderSwitch.addTarget(self, action: #selector(switchValueChanged), for: .valueChanged)
+        
+        reminderDays.onSelectedDaysChanged = { [weak self] days in
+            guard let self, var reminderData else { return }
+            reminderData.selectedDays = Weekday.allCases.filter { days.contains($0) }
+            
+            if days.isEmpty {
+                reminderData.isEnabled = false
+            }
+            
+            updateReminder?(reminderData)
+        }
     }
     
     @objc private func switchValueChanged() {
@@ -128,16 +138,40 @@ final class ReminderCard: UIView {
 
         timeContainer.isUserInteractionEnabled = isEnabled
         reminderDays.isUserInteractionEnabled = isEnabled
+        
+        guard var reminderData else { return }
+        reminderData.isEnabled = isEnabled
+        
+        if isEnabled, reminderData.selectedDays.isEmpty {
+            reminderData.selectedDays = Array(Set(Weekday.allCases))
+        }
+        
+        updateReminder?(reminderData)
     }
     
     func configure(_ data: ReminderSetting) {
+        reminderData = data
         reminderSwitch.isOn = data.isEnabled
         let time = String(format: "%02d:%02d", data.hour, data.minute)
         timeContainer.configure(time)
         
         reminderDays.configure(days: data.selectedDays)
         
-        updateReminderState(isEnabled: reminderSwitch.isOn)
+        if data.isEnabled {
+            timeContainer.alpha = 1
+            timeContainer.isUserInteractionEnabled = true
+            reminderDays.alpha = 1
+            reminderDays.isUserInteractionEnabled = true
+        } else {
+            timeContainer.alpha = 0.5
+            timeContainer.isUserInteractionEnabled = false
+            reminderDays.alpha = 0.5
+            reminderDays.isUserInteractionEnabled = false
+        }
+        
+        timeContainer.onButtonTapped = {[weak self] in
+            self?.onChangeReminder?(data)
+        }
     }
     
     func updateSwitch(isOn: Bool) {
@@ -170,7 +204,7 @@ final class TimeContainer: UIView {
         backgroundColor = .goldAccent.withAlphaComponent(0.12)
         
         label.font = .systemFont(ofSize: 14)
-        label.textColor = .systemGray2
+        label.textColor = .systemGray
         label.text = "Waktu pengingat"
         
         value.font = .systemFont(ofSize: 22, weight: .bold)
@@ -244,6 +278,7 @@ final class ReminderDaysView: UIView {
     private let stackView = UIStackView()
 
     var selectedDays: Set<Weekday> = Set(Weekday.allCases)
+    var onSelectedDaysChanged: ((Set<Weekday>) -> Void)?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -298,6 +333,8 @@ final class ReminderDaysView: UIView {
         } else {
             selectedDays.remove(day)
         }
+        
+        onSelectedDaysChanged?(selectedDays)
     }
     
     func configure(days: [Weekday]) {

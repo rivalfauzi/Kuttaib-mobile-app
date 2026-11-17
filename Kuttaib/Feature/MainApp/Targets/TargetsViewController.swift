@@ -102,13 +102,13 @@ final class TargetsViewController: BaseViewController {
                 }
                 presenter.activeTarget = activeData
                 
-                presenter.inActiveTargets = response.filter {
-                    $0.status == .inActive
-                }
+                presenter.inActiveTargets = response
+                    .filter { $0.status == .inActive }
+                    .sorted { ($0.targetNumber ?? 0) < ($1.targetNumber ?? 0) }
                 
-                presenter.doneTargets = response.filter {
-                    $0.status == .done
-                }
+                presenter.doneTargets = response
+                    .filter { $0.status == .done }
+                    .sorted { ($0.targetNumber ?? 0) < ($1.targetNumber ?? 0) }
                 
                 activeTarget.configure(presenter.activeTarget)
                 
@@ -174,7 +174,7 @@ final class TargetsViewController: BaseViewController {
             
             content.onContinueTapped = {
                 bottomSheet.dismissSheet()
-                self.nonActiveContinue(target)
+                self.saveTarget(target: target)
             }
             
             bottomSheet.setContent(content)
@@ -189,10 +189,6 @@ final class TargetsViewController: BaseViewController {
             guard let self, let userData = presenter.userData else { return }
             presenter.navigateTo(.targetDetail(user: userData, target: target))
         }
-    }
-    
-    private func nonActiveContinue(_ data: TargetModel) {
-        print("Ubah menjadi aktif")
     }
     
     private func nonActiveDetail(_ data: TargetModel) {

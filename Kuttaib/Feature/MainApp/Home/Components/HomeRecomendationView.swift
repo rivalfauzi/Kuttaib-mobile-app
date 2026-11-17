@@ -49,6 +49,7 @@ final class HomeRecomendationView: UIView {
         rightButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         rightButton.setTitle("Lihat Semua", for: .normal)
         rightButton.setTitleColor(.primaryGreen, for: .normal)
+        rightButton.isHidden = true
         
         [title, UIView(), rightButton].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false

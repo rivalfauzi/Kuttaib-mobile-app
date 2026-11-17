@@ -10,10 +10,10 @@ import Foundation
 import UserNotifications
 
 struct ReminderSetting: Codable {
-    let isEnabled: Bool
-    let hour: Int
-    let minute: Int
-    let selectedDays: [Weekday]
+    var isEnabled: Bool
+    var hour: Int
+    var minute: Int
+    var selectedDays: [Weekday]
 
 }
 

@@ -63,8 +63,8 @@ final class MainTabBarController: UITabBarController {
         
         targetsNav.tabBarItem = UITabBarItem(
             title: "Target",
-            image: UIImage(systemName: "book"),
-            selectedImage: UIImage(systemName: "book.fill")
+            image: UIImage(systemName: "target"),
+            selectedImage: UIImage(systemName: "target.fill")
         )
         
         let profileNav = UINavigationController()

@@ -186,7 +186,7 @@ final class MemorizationViewController: BaseViewController {
             recordHideVStackView.trailingAnchor.constraint(equalTo: recordHideView.trailingAnchor),
             recordHideVStackView.bottomAnchor.constraint(equalTo: recordHideView.bottomAnchor),
             
-            learnCollectionView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.4),
+            learnCollectionView.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.38),
             
             doneIcon.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.4),
         ])

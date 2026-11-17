@@ -233,6 +233,33 @@ final class ProfileViewController: BaseViewController {
             presenter.saveUserData()
         }
         
+        reminderCard.onChangeReminder = {[weak self] data in
+            guard let self else { return }
+            
+            let sheet = BottomSheetViewController()
+            let content = ChangeReminderBottomSheet()
+            content.configure(data)
+            
+            content.onClose = {
+                sheet.dismissSheet()
+            }
+            
+            content.onSave = { data in
+                sheet.dismissSheet()
+                self.saveReminder(data)
+            }
+            
+            sheet.setContent(content)
+            
+            sheet.modalPresentationStyle = .overFullScreen
+            sheet.modalTransitionStyle = .crossDissolve
+            
+            present(sheet, animated: false)
+        }
+        
+        reminderCard.updateReminder = {[weak self] data in
+            self?.saveReminder(data)
+        }
     }
     
     private func listener() {
@@ -301,6 +328,10 @@ final class ProfileViewController: BaseViewController {
     private func initService() {
         mainVStack.showAnimatedGradientSkeleton()
         presenter.initialFetch()
+    }
+    
+    private func saveReminder(_ data: ReminderSetting) {
+        presenter.saveReminderData(data)
     }
     
     private func showNotificationPermissionAlert() {

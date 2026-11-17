@@ -33,17 +33,13 @@ final class ProfilePresenter {
     
     func fetchUser() {
         UserRepository.fetchUser { [weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onFetchUserData?(result)
-            }
+            self?.onFetchUserData?(result)
         }
     }
     
     func getActiveTarget() {
         TargetRepository.getActiveTarget {[weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onGetActiveTarget?(result)
-            }
+            self?.onGetActiveTarget?(result)
         }
     }
     
@@ -72,9 +68,7 @@ final class ProfilePresenter {
                 
                 let data = ProfileStatisticEntity(totalAyah: totalAyah, totalDays: totalDays, longestStreak: longestStreak)
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    self.onGetAllTask?(data)
-                }
+                self.onGetAllTask?(data)
                 
             case .failure(let error):
                 print("Error: \(error)")
@@ -83,10 +77,15 @@ final class ProfilePresenter {
     }
     
     func getReminderData() {
-        self.reminderData = ReminderManager.shared.load()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {[weak self] in
-            self?.onGetReminderData?(self?.reminderData)
-        }
+        reminderData = ReminderManager.shared.load()
+        onGetReminderData?(reminderData)
+    }
+    
+    func saveReminderData(_ data: ReminderSetting) {
+        reminderData = data
+        
+        ReminderManager.shared.save(data)
+        onGetReminderData?(reminderData)
     }
     
     func fetchSurah(callback: @escaping (Result<[Quran.Surah.Response], Error>) -> Void) {
@@ -143,9 +142,7 @@ final class ProfilePresenter {
         guard let userData else { return }
         
         UserRepository.saveUser(data: userData) {[weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onFetchUserData?(result)
-            }
+            self?.onFetchUserData?(result)
         }
     }
     
@@ -153,9 +150,7 @@ final class ProfilePresenter {
         guard let userData else { return }
         
         UserRepository.saveUser(data: userData) {[weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onFetchUserData?(result)
-            }
+            self?.onFetchUserData?(result)
         }
     }
     

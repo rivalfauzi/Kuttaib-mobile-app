@@ -27,10 +27,9 @@ final class HomePresenter {
         
         group.enter()
         UserRepository.fetchUser { [weak self] result in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self?.onFetchUserData?(result)
-                group.leave()
-            }
+            defer { group.leave() }
+            
+            self?.onFetchUserData?(result)
         }
         
         var juzData: [Quran.MetaData.Response.Juz.Reference] = []

@@ -43,6 +43,7 @@ enum TaskRepository {
                 task.id = UUID()
                 task.status = data.status?.rawValue
                 task.surahNumber = Int16(data.surahNumber ?? -1)
+                task.surahName = data.surahName
                 task.startAyah = Int16(data.startAyah ?? -1)
                 task.endAyah = Int16(data.endAyah ?? -1)
                 task.completedEndAyah = Int16(data.completedEndAyah ?? -1)

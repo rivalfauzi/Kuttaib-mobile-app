@@ -122,57 +122,55 @@ final class SetTargetPresenter {
     }
     
     func calculateTarget(_ metaData: Quran.MetaData.Response, callback: @escaping ([MainTargetEntity]) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
-            guard let self, let dailyTarget = targetDataStore.dailyTarget,
-                let mainTarget = targetDataStore.mainTarget,
-                let timeTarget = targetDataStore.timeTarget,
-                let surahData
-            else { return }
+        guard let dailyTarget = targetDataStore.dailyTarget,
+            let mainTarget = targetDataStore.mainTarget,
+            let timeTarget = targetDataStore.timeTarget,
+            let surahData
+        else { return }
+        
+        var totalAyat: Int
+        var daysEstimate: Int
+        
+        switch mainTarget.type {
+        case .juz:
+            guard let juzData = JSONReaderHelper.getJuzData(by: mainTarget.value, data: metaData) else { return }
             
-            var totalAyat: Int
-            var daysEstimate: Int
+            let arrayOfSurahs = JSONReaderHelper.getSurahInJuz(in: juzData, surahs: surahData)
             
-            switch mainTarget.type {
-            case .juz:
-                guard let juzData = JSONReaderHelper.getJuzData(by: mainTarget.value, data: metaData) else { return }
-                
-                let arrayOfSurahs = JSONReaderHelper.getSurahInJuz(in: juzData, surahs: surahData)
-                
-                totalAyat = JSONReaderHelper.totalAyahInJuz(in: juzData, surahs: arrayOfSurahs)
-            case .surah:
-                guard let surah = JSONReaderHelper.getSurahData(by: mainTarget.value, data: surahData) else { return }
-                
-                totalAyat = surah.numberOfAyahs
-            }
+            totalAyat = JSONReaderHelper.totalAyahInJuz(in: juzData, surahs: arrayOfSurahs)
+        case .surah:
+            guard let surah = JSONReaderHelper.getSurahData(by: mainTarget.value, data: surahData) else { return }
             
-            targetModel.targetType = mainTarget.type
-            targetModel.targetNumber = mainTarget.value
-            targetModel.surahName = mainTarget.name
-            targetModel.totalVerseCount = totalAyat
-
-            switch dailyTarget.type {
-            case .ayat:
-                daysEstimate = Int(ceil(Double(totalAyat) / Double(dailyTarget.value)))
-            case .page:
-                daysEstimate = 0
-            }
-            
-            let mainTargetLabel: String
-            
-            if case .surah = mainTarget.type, let name = mainTarget.name {
-                mainTargetLabel = "\(mainTarget.type.rawValue.capitalized) \(name)"
-            } else {
-                mainTargetLabel = "\(mainTarget.type.rawValue.capitalized) \(mainTarget.value)"
-            }
-            
-            let items: [MainTargetEntity] = [
-                .init(title: "Target", subtitle: mainTargetLabel, icon: "book.pages.fill", populer: false, value: 0),
-                .init(title: "Target Harian", subtitle: "\(dailyTarget.value) ayat per hari", icon: "tree.fill", populer: false, value: 0),
-                .init(title: "Waktu Belajar", subtitle: "\(timeTarget) menit per hari", icon: "clock.fill", populer: false, value: 0),
-                .init(title: "Estimasi Selesai", subtitle: "\(daysEstimate) hari", icon: "clock.fill", populer: false, value: 0)
-            ]
-            
-            callback(items)
+            totalAyat = surah.numberOfAyahs
         }
+        
+        targetModel.targetType = mainTarget.type
+        targetModel.targetNumber = mainTarget.value
+        targetModel.surahName = mainTarget.name
+        targetModel.totalVerseCount = totalAyat
+
+        switch dailyTarget.type {
+        case .ayat:
+            daysEstimate = Int(ceil(Double(totalAyat) / Double(dailyTarget.value)))
+        case .page:
+            daysEstimate = 0
+        }
+        
+        let mainTargetLabel: String
+        
+        if case .surah = mainTarget.type, let name = mainTarget.name {
+            mainTargetLabel = "\(mainTarget.type.rawValue.capitalized) \(name)"
+        } else {
+            mainTargetLabel = "\(mainTarget.type.rawValue.capitalized) \(mainTarget.value)"
+        }
+        
+        let items: [MainTargetEntity] = [
+            .init(title: "Target", subtitle: mainTargetLabel, icon: "book.pages.fill", populer: false, value: 0),
+            .init(title: "Target Harian", subtitle: "\(dailyTarget.value) ayat per hari", icon: "tree.fill", populer: false, value: 0),
+            .init(title: "Waktu Belajar", subtitle: "\(timeTarget) menit per hari", icon: "clock.fill", populer: false, value: 0),
+            .init(title: "Estimasi Selesai", subtitle: "\(daysEstimate) hari", icon: "clock.fill", populer: false, value: 0)
+        ]
+        
+        callback(items)
     }
 }
