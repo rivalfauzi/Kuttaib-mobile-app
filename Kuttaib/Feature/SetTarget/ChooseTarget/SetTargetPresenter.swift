@@ -13,6 +13,11 @@ final class SetTargetPresenter {
     var surahData: [Quran.Surah.Response]?
     var selectedDataIndexes: [Int: Int] = [:]
     var targetModel = TargetModel()
+    var metaData: [Quran.MetaData.Response.Juz.Reference]?
+    
+    var onFetchSurahData: (([Quran.Surah.Response]) -> Void)?
+    var onFetchMetaData: (([Quran.MetaData.Response.Juz.Reference]) -> Void)?
+    var onDoneFetch: (() -> Void)?
     
     var targetData: [SetTargetEntity] = [
         .init(
@@ -29,12 +34,12 @@ final class SetTargetPresenter {
                     type: TargetType.surah.rawValue
                 ),
                 .init(
-                    title: "Al-Mulk",
-                    subtitle: "Surah pendek populer",
+                    title: "Juz 30",
+                    subtitle: "Paling sering dibaca",
                     icon: "moon.stars.fill",
                     populer: false,
-                    value: 67,
-                    type: TargetType.surah.rawValue
+                    value: 30,
+                    type: TargetType.juz.rawValue
                 ),
                 .init(
                     title: "Ar-Rahmaan",
@@ -75,8 +80,38 @@ final class SetTargetPresenter {
         coordinator.navigate(type)
     }
     
-    func fetch(callback: @escaping (Result<[Quran.Surah.Response], Error>) -> Void) {
-        QuranRepository.fetchSurah(callback: callback)
+    func fetch() {
+        let group = DispatchGroup()
+        
+        group.enter()
+        QuranRepository.fetchSurah {[weak self] result in
+            defer { group.leave() }
+            switch result {
+            case .success(let response):
+                self?.surahData = response
+                self?.onFetchSurahData?(response)
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+        
+        group.enter()
+        QuranRepository.fetchMetaData {[weak self] result in
+            defer { group.leave() }
+            switch result {
+            case .success(let response):
+                let juzs = response.juzs.references
+                
+                self?.metaData = juzs
+                self?.onFetchMetaData?(juzs)
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+        
+        group.notify(queue: .main) {[weak self] in
+            self?.onDoneFetch?()
+        }
     }
     
     func fetchQuranMetaData(callback: @escaping (Result<Quran.MetaData.Response, Error>) -> Void) {

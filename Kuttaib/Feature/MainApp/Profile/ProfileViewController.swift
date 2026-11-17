@@ -163,7 +163,7 @@ final class ProfileViewController: BaseViewController {
                     case .success(let response):
                         let switchTargetBottomSheet = TargetPickerBottomSheet()
                         
-                        switchTargetBottomSheet.setData(response, selectedNumber: self.presenter.activeTarget?.targetNumber)
+//                        switchTargetBottomSheet.setData(response, selectedNumber: self.presenter.activeTarget?.targetNumber)
                         switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
                         
                         switchTargetBottomSheet.didSelect = { target in

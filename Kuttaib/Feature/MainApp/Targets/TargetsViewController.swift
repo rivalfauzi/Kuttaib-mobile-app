@@ -137,7 +137,7 @@ final class TargetsViewController: BaseViewController {
                     
                     let switchTargetBottomSheet = TargetPickerBottomSheet()
                     
-                    switchTargetBottomSheet.setData(response)
+//                    switchTargetBottomSheet.setData(response)
                     switchTargetBottomSheet.userDailyTarget = self.presenter.userData?.dailyVerseTarget
                     
                     switchTargetBottomSheet.didSelect = { target in

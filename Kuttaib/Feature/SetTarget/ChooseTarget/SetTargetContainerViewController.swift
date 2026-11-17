@@ -40,7 +40,7 @@ final class SetTargetContainerViewController: BaseViewController {
         navigationController?.setNavigationBarHidden(true, animated: false)
         setup()
         setupAction()
-        initService()
+//        initService()
     }
     
     private func setup() {
@@ -170,24 +170,11 @@ final class SetTargetContainerViewController: BaseViewController {
     
     private func initService() {
         showLoading()
-        presenter.fetch { [weak self] result in
-            guard let self else { return }
-            
-            hideLoading()
-            
-            switch result {
-            case .success(let response):
-                presenter.surahData = response
-                sheet.setData(response)
-            case .failure(let error):
-                print("Error: \(error)")
-            }
-            
-        }
+        presenter.fetch()
     }
     
     private func showPopupCustomTarget() {
-        if let presentation = sheet.sheetPresentationController, presenter.surahData != nil {
+        if let presentation = sheet.sheetPresentationController {
             presentation.detents = [.large()]
             presentation.prefersGrabberVisible = false
             

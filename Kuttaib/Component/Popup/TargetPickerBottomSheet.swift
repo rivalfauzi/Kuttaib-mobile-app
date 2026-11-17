@@ -7,6 +7,19 @@
 
 import UIKit
 
+struct TargetPickerCellEntity: Equatable {
+    var title: String
+    var subtitle: String
+    var targetNumber: Int
+    var type: TargetType
+    var totalCount: Int
+    
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.targetNumber == rhs.targetNumber &&
+        lhs.type == rhs.type
+    }
+}
+
 final class TargetPickerBottomSheet: UIViewController {
 
     private let titleLabel = UILabel()
@@ -15,6 +28,10 @@ final class TargetPickerBottomSheet: UIViewController {
     
     private let closeButton = UIButton()
     private let topHStack = UIStackView()
+    
+    private let juzButton = UIButton(type: .system)
+    private let surahButton = UIButton(type: .system)
+    private let tabStack = UIStackView()
     
     private let textfieldIcon = UIImageView()
     private let searchTextField = UITextField()
@@ -39,16 +56,20 @@ final class TargetPickerBottomSheet: UIViewController {
     var onClose: (() -> Void)?
     
     var userDailyTarget: Int?
-    var originalData: [Quran.Surah.Response] = []
-    private var filteredData: [Quran.Surah.Response] = []
-    private var selectedData: Quran.Surah.Response?
-    private var previousData: Quran.Surah.Response?
+    var originalSurahsData: [Quran.Surah.Response] = []
+    var originalJuzsData: [Quran.MetaData.Response.Juz.Reference] = []
     
+    private var filteredData: [TargetPickerCellEntity] = []
+    private var selectedData: TargetPickerCellEntity?
+    private var previousData: TargetPickerCellEntity?
+    
+    private var selectedTab: TargetType = .surah
 
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setup()
+        fetch()
     }
     
     private func setup() {
@@ -87,6 +108,26 @@ final class TargetPickerBottomSheet: UIViewController {
         topHStack.alignment = .center
         topHStack.distribution = .fill
         
+        surahButton.backgroundColor = .primaryGreen
+        surahButton.setTitleColor(.white, for: .normal)
+        surahButton.layer.cornerRadius = 12
+        surahButton.setTitle("Surah", for: .normal)
+        
+        juzButton.backgroundColor = .systemGray6
+        juzButton.setTitleColor(.black, for: .normal)
+        juzButton.layer.cornerRadius = 12
+        juzButton.setTitle("Juz", for: .normal)
+        
+        [surahButton, juzButton].forEach {
+            $0.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+            $0.translatesAutoresizingMaskIntoConstraints = false
+            tabStack.addArrangedSubview($0)
+        }
+
+        tabStack.axis = .horizontal
+        tabStack.spacing = 8
+        tabStack.distribution = .fillEqually
+        
         textfieldIcon.image = UIImage(systemName: "magnifyingglass")
         textfieldIcon.tintColor = .systemGray2
         textfieldIcon.contentMode = .scaleAspectFit
@@ -122,7 +163,7 @@ final class TargetPickerBottomSheet: UIViewController {
         infoHStack.distribution = .fill
         infoHStack.isHidden = selectedData == nil
         
-        [topHStack, searchTextField, infoHStack].forEach {
+        [topHStack, tabStack, searchTextField, infoHStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             headerVStack.addArrangedSubview($0)
         }
@@ -179,6 +220,8 @@ final class TargetPickerBottomSheet: UIViewController {
             headerVStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             headerVStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
             
+            tabStack.heightAnchor.constraint(equalToConstant: 44),
+            
             textfieldLeftContainer.heightAnchor.constraint(equalToConstant: 24),
             textfieldLeftContainer.widthAnchor.constraint(equalToConstant: 48),
             textfieldIcon.heightAnchor.constraint(equalToConstant: 24),
@@ -217,25 +260,84 @@ final class TargetPickerBottomSheet: UIViewController {
         closeButton.addTarget(self, action: #selector(onCloseTapped), for: .touchUpInside)
         searchTextField.addTarget(self, action: #selector(searchTextChanged), for: .editingChanged)
         footerButton.addTarget(self, action: #selector(onSelectTapped), for: .touchUpInside)
+        juzButton.addTarget(self, action: #selector(juzTapped), for: .touchUpInside)
+        surahButton.addTarget(self, action: #selector(surahTapped), for: .touchUpInside)
     }
     
-    func setData(_ data: [Quran.Surah.Response], selectedNumber: Int? = nil) {
-        originalData = data
-        filteredData = data
+    func setData(_ target: TargetModel? = nil) {
+//        originalSurahsData = data
+//        filteredData = data
         
-        if let selectedNumber {
-            previousData = data.first {
-                $0.number == selectedNumber
-            }
-            selectedData = previousData
+//        if let selectedNumber {
+//            previousData = data.first {
+//                $0.number == selectedNumber
+//            }
+//            selectedData = previousData
+//        }
+    }
+    
+    
+    private func updateTabState() {
+        let selectedColor = UIColor.primaryGreen
+        let unselectedColor = UIColor.systemGray6
+        
+        switch selectedTab {
+        case .juz:
+            subtitleLabel.text = "Pilih juz yang ingin kamu hafal."
+            searchTextField.placeholder = "Cari nomor juz"
+            juzButton.backgroundColor = selectedColor
+            surahButton.backgroundColor = unselectedColor
+            juzButton.setTitleColor(.white, for: .normal)
+            surahButton.setTitleColor(.black, for: .normal)
+        case .surah:
+            subtitleLabel.text = "Pilih surah yang ingin kamu hafal."
+            searchTextField.placeholder = "Cari nama atau nomor surah"
+            juzButton.backgroundColor = unselectedColor
+            surahButton.backgroundColor = selectedColor
+            juzButton.setTitleColor(.black, for: .normal)
+            surahButton.setTitleColor(.white, for: .normal)
         }
+        
+        updateFilteredData()
+    }
+    
+    private func updateFilteredData() {
+        let keyword = searchTextField.text ?? ""
+        
+        switch selectedTab {
+        case .juz:
+            filteredData = originalJuzsData.enumerated().map { index, data in
+                let juzsNumber = index + 1
+                let pages = (data.endPage - data.startPage) + 1
+                
+                return TargetPickerCellEntity(title: "Juz \(juzsNumber)", subtitle: "\(pages) halaman", targetNumber: juzsNumber, type: .juz, totalCount: pages)
+            }
+        case .surah:
+            filteredData = originalSurahsData.map {
+                TargetPickerCellEntity(title: $0.englishName, subtitle: "\($0.numberOfAyahs) ayat", targetNumber: $0.number, type: .surah, totalCount: $0.numberOfAyahs)
+            }
+        }
+        
+        if !keyword.isEmpty {
+            filteredData = filteredData.filter {
+                $0.title.localizedCaseInsensitiveContains(keyword) ||
+                String($0.targetNumber).contains(keyword)
+            }
+        }
+        
+        tableView.reloadData()
     }
     
     private func updateButton() {
-        if let selectedData, selectedData.number != previousData?.number {
-            footerButton.isEnabled = true
-        } else {
+        guard let selectedData else {
             footerButton.isEnabled = false
+            return
+        }
+        
+        if selectedData == previousData {
+            footerButton.isEnabled = false
+        } else {
+            footerButton.isEnabled = true
         }
     }
     
@@ -246,47 +348,47 @@ final class TargetPickerBottomSheet: UIViewController {
     }
     
     @objc private func searchTextChanged() {
-        let keyword = searchTextField.text ?? ""
-
-        if keyword.isEmpty {
-            filteredData = originalData
-        } else {
-            filteredData = originalData.filter {
-                $0.englishName.localizedCaseInsensitiveContains(keyword) ||
-                String($0.number).contains(keyword)
-            }
-        }
-
-        tableView.reloadData()
+        updateFilteredData()
     }
     
     @objc private func onSelectTapped() {
         guard let selectedData else { return }
-        
         getTargetData(selectedData)
+    }
+    
+    @objc private func juzTapped() {
+        selectedTab = .juz
+        updateTabState()
+        tableView.reloadData()
+    }
+
+    @objc private func surahTapped() {
+        selectedTab = .surah
+        updateTabState()
+        tableView.reloadData()
     }
 }
 
 extension TargetPickerBottomSheet {
-    private func getTargetData(_ data: Quran.Surah.Response) {
-        TargetRepository.getTargetByNumber(number: data.number) {[weak self] result in
-            switch result {
-            case .success(let response):
-                if let response {
-                    self?.showAlert(targetModel: response)
-                } else {
-                    var targetModel = TargetModel()
-                    targetModel.targetType = .surah
-                    targetModel.targetNumber = data.number
-                    targetModel.totalVerseCount = data.numberOfAyahs
-                    targetModel.surahName = data.englishName
-                    
-                    self?.didSelect?(targetModel)
-                }
-            case .failure(let error):
-                print("Error: \(error)")
-            }
-        }
+    private func getTargetData(_ data: TargetPickerCellEntity) {
+//        TargetRepository.getTargetByNumber(number: data.number) {[weak self] result in
+//            switch result {
+//            case .success(let response):
+//                if let response {
+//                    self?.showAlert(targetModel: response)
+//                } else {
+//                    var targetModel = TargetModel()
+//                    targetModel.targetType = .surah
+//                    targetModel.targetNumber = data.number
+//                    targetModel.totalVerseCount = data.numberOfAyahs
+//                    targetModel.surahName = data.englishName
+//                    
+//                    self?.didSelect?(targetModel)
+//                }
+//            case .failure(let error):
+//                print("Error: \(error)")
+//            }
+//        }
     }
     
     private func showAlert(targetModel: TargetModel) {
@@ -322,6 +424,38 @@ extension TargetPickerBottomSheet {
         
         self.didSelect?(newTarget)
     }
+    
+    private func fetch() {
+        let group = DispatchGroup()
+        
+        group.enter()
+        QuranRepository.fetchSurah {[weak self] result in
+            defer { group.leave() }
+            
+            switch result {
+            case .success(let response):
+                self?.originalSurahsData = response
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+        
+        group.enter()
+        QuranRepository.fetchMetaData {[weak self] result in
+            defer { group.leave() }
+            
+            switch result {
+            case .success(let response):
+                self?.originalJuzsData = response.juzs.references
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+        
+        group.notify(queue: .main) {[weak self] in
+            self?.updateFilteredData()
+        }
+    }
 }
 
 extension TargetPickerBottomSheet: UITableViewDataSource, UITableViewDelegate {
@@ -335,7 +469,7 @@ extension TargetPickerBottomSheet: UITableViewDataSource, UITableViewDelegate {
 
         let item = filteredData[indexPath.item]
         cell.setConfigurasi(item)
-        cell.isSelectedTarget = selectedData?.number == item.number
+        cell.isSelectedTarget = selectedData == item
         
         return cell
     }
@@ -346,11 +480,11 @@ extension TargetPickerBottomSheet: UITableViewDataSource, UITableViewDelegate {
         let item = filteredData[indexPath.item]
         
         if let userDailyTarget {
-            footerTitle.text = "\(item.englishName) • \(item.numberOfAyahs) ayat"
+            footerTitle.text = "\(item.title) • \(item.subtitle)"
             footerTitle.isHidden = false
             
-            let estimated = (item.numberOfAyahs + userDailyTarget - 1) / userDailyTarget
-            footerDesc.text = "Estimasi selesai ± \(estimated) hari dengan \(userDailyTarget) ayat per hari"
+            let estimated = (item.totalCount + userDailyTarget - 1) / userDailyTarget
+            footerDesc.text = "Estimasi selesai ± \(estimated) hari dengan \(item.subtitle) per hari"
             footerDesc.isHidden = false
         }
         
@@ -445,10 +579,10 @@ final class TargetPickerCell: UITableViewCell {
         ])
     }
     
-    func setConfigurasi(_ item: Quran.Surah.Response) {
-        indexLabel.text = "\(item.number)"
-        title.text = item.englishName
-        subtitle.text = "\(item.numberOfAyahs) ayat"
+    func setConfigurasi(_ item: TargetPickerCellEntity) {
+        indexLabel.text = "\(item.targetNumber)"
+        title.text = item.title
+        subtitle.text = item.subtitle
     }
     
     private func updateView() {
