@@ -32,6 +32,17 @@ class OnboardingViewController: BaseViewController {
         super.viewDidLoad()
         view.backgroundColor = .onboardingBackground
         setup()
+        
+//        let _ = ApiRequest.request(URL(string: "http://localhost:8080/api/surah/list")!, method: .get) { result in
+//            do {
+//                let response = try result.get() as [Response]
+//                print(response)
+//            } catch {
+//                
+//            }
+//        }
+        
+        
     }
     
     override func viewDidLayoutSubviews() {

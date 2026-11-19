@@ -12,12 +12,12 @@ enum Quran {
     enum Surah {
         
         struct Response: Decodable {
-            let number: Int
-            let name: String
-            let englishName: String
-            let englishNameTranslation: String
-            let numberOfAyahs: Int
-            let revelationType: String
+            let number: Int?
+            let name: String?
+            let englishName: String?
+            let englishNameTranslation: String?
+            let numberOfAyahs: Int?
+            let revelationType: String?
         }
     }
     

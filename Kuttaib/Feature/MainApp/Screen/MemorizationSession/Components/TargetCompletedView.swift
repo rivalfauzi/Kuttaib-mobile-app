@@ -170,19 +170,19 @@ final class TargetCompletedView: UIViewController {
     }
     
     func setData(previous: Quran.Surah.Response, next: Quran.Surah.Response, userDailyTarget: Int) {
-        descriptionLabel.text = "Kamu telah menyelesaikan hafalan Surah \(previous.englishName) (\(previous.numberOfAyahs) ayat)."
+        descriptionLabel.text = "Kamu telah menyelesaikan hafalan Surah \(previous.englishName ?? "") (\(previous.numberOfAyahs ?? 0) ayat)."
         
-        numberLabel.text = "\(next.number)"
+        numberLabel.text = "\(next.number ?? 0)"
         badgeSurahLabel.text = next.englishName
-        badgeAyatNumberLabel.text = "\(next.numberOfAyahs) ayat"
+        badgeAyatNumberLabel.text = "\(next.numberOfAyahs ?? 0) ayat"
         finishButton.setTitle("Pilih Nanti Saja", for: .normal)
         
-        let estimated = (next.numberOfAyahs + userDailyTarget - 1) / userDailyTarget
+        let estimated = ((next.numberOfAyahs ?? 0) + userDailyTarget - 1) / userDailyTarget
         notes.text = "Estimasi selesai ± \(estimated) hari dengan \(userDailyTarget) ayat per hari"
     }
     
     func hideNextSession(previous: Quran.Surah.Response) {
-        descriptionLabel.text = "Kamu telah menyelesaikan hafalan Surah \(previous.englishName) (\(previous.numberOfAyahs) ayat)."
+        descriptionLabel.text = "Kamu telah menyelesaikan hafalan Surah \(previous.englishName ?? "") (\(previous.numberOfAyahs ?? 0) ayat)."
         badgeView.isHidden = true
         continueButton.isHidden = true
         notes.isHidden = true

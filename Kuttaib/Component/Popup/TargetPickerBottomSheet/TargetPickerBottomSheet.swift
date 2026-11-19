@@ -7,19 +7,6 @@
 
 import UIKit
 
-struct TargetPickerCellEntity: Equatable {
-    var title: String
-    var subtitle: String
-    var targetNumber: Int
-    var type: TargetType
-    var totalCount: Int
-    
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.targetNumber == rhs.targetNumber &&
-        lhs.type == rhs.type
-    }
-}
-
 final class TargetPickerBottomSheet: UIViewController {
 
     private let titleLabel = UILabel()
@@ -55,9 +42,23 @@ final class TargetPickerBottomSheet: UIViewController {
     var didSelect: ((TargetModel) -> Void)?
     var onClose: (() -> Void)?
     
+    struct SurahListResponse: Decodable {
+        let id: String
+        let latinName: String
+        let number: Int
+        let verseCount: Int
+    }
+    
+    struct JuzListResponse: Decodable {
+        let id: String
+        let totalPage: Int
+        let number: Int
+        let totalVerseCount: Int
+    }
+    
     var userDailyTarget: Int?
-    var originalSurahsData: [Quran.Surah.Response] = []
-    var originalJuzsData: [Quran.MetaData.Response.Juz.Reference] = []
+    private var originalSurahsData: [SurahListResponse] = []
+    private var originalJuzsData: [JuzListResponse] = []
     
     private var filteredData: [TargetPickerCellEntity] = []
     private var selectedData: TargetPickerCellEntity?
@@ -264,18 +265,9 @@ final class TargetPickerBottomSheet: UIViewController {
         surahButton.addTarget(self, action: #selector(surahTapped), for: .touchUpInside)
     }
     
-    func setData(_ target: TargetModel? = nil) {
-//        originalSurahsData = data
-//        filteredData = data
-        
-//        if let selectedNumber {
-//            previousData = data.first {
-//                $0.number == selectedNumber
-//            }
-//            selectedData = previousData
-//        }
+    func setData(_ target: TargetPickerCellEntity) {
+        previousData = target
     }
-    
     
     private func updateTabState() {
         let selectedColor = UIColor.primaryGreen
@@ -306,15 +298,12 @@ final class TargetPickerBottomSheet: UIViewController {
         
         switch selectedTab {
         case .juz:
-            filteredData = originalJuzsData.enumerated().map { index, data in
-                let juzsNumber = index + 1
-                let pages = (data.endPage - data.startPage) + 1
-                
-                return TargetPickerCellEntity(title: "Juz \(juzsNumber)", subtitle: "\(pages) halaman", targetNumber: juzsNumber, type: .juz, totalCount: pages)
+            filteredData = originalJuzsData.map {
+                return TargetPickerCellEntity(id: $0.id, title: "Juz \($0.number)", subtitle: "\($0.totalPage) halaman", targetNumber: $0.number, type: .juz, totalCount: $0.totalPage)
             }
         case .surah:
             filteredData = originalSurahsData.map {
-                TargetPickerCellEntity(title: $0.englishName, subtitle: "\($0.numberOfAyahs) ayat", targetNumber: $0.number, type: .surah, totalCount: $0.numberOfAyahs)
+                TargetPickerCellEntity(id: $0.id, title: $0.latinName, subtitle: "\($0.verseCount) ayat", targetNumber: $0.number, type: .surah, totalCount: $0.verseCount)
             }
         }
         
@@ -329,15 +318,10 @@ final class TargetPickerBottomSheet: UIViewController {
     }
     
     private func updateButton() {
-        guard let selectedData else {
-            footerButton.isEnabled = false
-            return
-        }
-        
-        if selectedData == previousData {
-            footerButton.isEnabled = false
-        } else {
+        if let selectedData, selectedData != previousData {
             footerButton.isEnabled = true
+        } else {
+            footerButton.isEnabled = false
         }
     }
     
@@ -353,43 +337,32 @@ final class TargetPickerBottomSheet: UIViewController {
     
     @objc private func onSelectTapped() {
         guard let selectedData else { return }
-        getTargetData(selectedData)
+        var targetModel = TargetModel()
+        targetModel.targetType = selectedData.type
+        targetModel.targetNumber = selectedData.targetNumber
+        targetModel.totalVerseCount = selectedData.totalCount
+        
+        didSelect?(targetModel)
     }
     
     @objc private func juzTapped() {
         selectedTab = .juz
+        selectedData = nil
         updateTabState()
+        updateButton()
         tableView.reloadData()
     }
 
     @objc private func surahTapped() {
         selectedTab = .surah
+        selectedData = nil
         updateTabState()
+        updateButton()
         tableView.reloadData()
     }
 }
 
 extension TargetPickerBottomSheet {
-    private func getTargetData(_ data: TargetPickerCellEntity) {
-//        TargetRepository.getTargetByNumber(number: data.number) {[weak self] result in
-//            switch result {
-//            case .success(let response):
-//                if let response {
-//                    self?.showAlert(targetModel: response)
-//                } else {
-//                    var targetModel = TargetModel()
-//                    targetModel.targetType = .surah
-//                    targetModel.targetNumber = data.number
-//                    targetModel.totalVerseCount = data.numberOfAyahs
-//                    targetModel.surahName = data.englishName
-//                    
-//                    self?.didSelect?(targetModel)
-//                }
-//            case .failure(let error):
-//                print("Error: \(error)")
-//            }
-//        }
-    }
     
     private func showAlert(targetModel: TargetModel) {
         let alert = GeneralAlert()
@@ -429,25 +402,25 @@ extension TargetPickerBottomSheet {
         let group = DispatchGroup()
         
         group.enter()
-        QuranRepository.fetchSurah {[weak self] result in
+        let _ = ApiRequest.request(URL(string: "http://localhost:8080/api/surah/list")!, method: .get) {[weak self] result in
             defer { group.leave() }
             
-            switch result {
-            case .success(let response):
+            do {
+                let response = try result.get() as [SurahListResponse]
                 self?.originalSurahsData = response
-            case .failure(let error):
+            } catch {
                 print("Error: \(error)")
             }
         }
         
         group.enter()
-        QuranRepository.fetchMetaData {[weak self] result in
+        let _ = ApiRequest.request(URL(string: "http://localhost:8080/api/juz/list")!, method: .get) {[weak self] result in
             defer { group.leave() }
             
-            switch result {
-            case .success(let response):
-                self?.originalJuzsData = response.juzs.references
-            case .failure(let error):
+            do {
+                let response = try result.get() as [JuzListResponse]
+                self?.originalJuzsData = response
+            } catch {
                 print("Error: \(error)")
             }
         }
@@ -491,286 +464,5 @@ extension TargetPickerBottomSheet: UITableViewDataSource, UITableViewDelegate {
         selectedData = item
         updateButton()
         tableView.reloadData()
-    }
-}
-
-final class TargetPickerCell: UITableViewCell {
-    static let identifier = "TargetPickerCell"
-    
-    private let indexLabel = UILabel()
-    private let indexBackground = UIView()
-    
-    private let title = UILabel()
-    private let subtitle = UILabel()
-    private let centerVStack = UIStackView()
-    
-    private let rightImage = UIImageView()
-    private let mainHStack = UIStackView()
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupView()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError()
-    }
-    
-    var isSelectedTarget = false {
-        didSet {
-            updateView()
-        }
-    }
-
-    private func setupView() {
-        indexLabel.font = .systemFont(ofSize: 15, weight: .bold)
-        indexLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        indexBackground.addSubview(indexLabel)
-        indexBackground.layer.cornerRadius = 12
-        
-        title.font = .systemFont(ofSize: 16, weight: .bold)
-        title.textColor = .black
-        title.textAlignment = .left
-        
-        subtitle.font = .systemFont(ofSize: 13)
-        subtitle.textColor = .systemGray2
-        subtitle.textAlignment = .left
-        
-        [title, subtitle].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            centerVStack.addArrangedSubview($0)
-        }
-        
-        centerVStack.axis = .vertical
-        centerVStack.spacing = 4
-        centerVStack.alignment = .fill
-        centerVStack.distribution = .fill
-        
-        rightImage.contentMode = .scaleAspectFit
-        
-        [indexBackground, centerVStack, rightImage].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            mainHStack.addArrangedSubview($0)
-        }
-        
-        mainHStack.axis = .horizontal
-        mainHStack.spacing = 16
-        mainHStack.alignment = .center
-        mainHStack.distribution = .fill
-        mainHStack.translatesAutoresizingMaskIntoConstraints = false
-        
-        contentView.addSubview(mainHStack)
-        
-        NSLayoutConstraint.activate([
-            mainHStack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            mainHStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            mainHStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            mainHStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
-            
-            indexBackground.heightAnchor.constraint(equalToConstant: 40),
-            indexBackground.widthAnchor.constraint(equalToConstant: 40),
-            
-            indexLabel.centerXAnchor.constraint(equalTo: indexBackground.centerXAnchor),
-            indexLabel.centerYAnchor.constraint(equalTo: indexBackground.centerYAnchor),
-            
-            rightImage.heightAnchor.constraint(equalToConstant: 24),
-            rightImage.widthAnchor.constraint(equalToConstant: 24)
-        ])
-    }
-    
-    func setConfigurasi(_ item: TargetPickerCellEntity) {
-        indexLabel.text = "\(item.targetNumber)"
-        title.text = item.title
-        subtitle.text = item.subtitle
-    }
-    
-    private func updateView() {
-        if isSelectedTarget {
-            contentView.backgroundColor = .backgroundGreen
-            indexLabel.textColor = .white
-            indexBackground.backgroundColor = .primaryGreen
-            rightImage.image = UIImage(systemName: "checkmark.circle.fill")
-            rightImage.tintColor = .primaryGreen
-        } else {
-            contentView.backgroundColor = .white
-            indexLabel.textColor = .systemGray2
-            indexBackground.backgroundColor = .systemGray5
-            rightImage.image = UIImage(systemName: "circle")
-            rightImage.tintColor = .systemGray2
-        }
-    }
-}
-
-final class PopupAlertSetTarget: UIView {
-    let title = UILabel()
-    let subtitle = UILabel()
-    
-    let badgeTitleLabel = UILabel()
-    let badgeDescriptionLabel = UILabel()
-    let topHStack = UIStackView()
-    let progressBar = LineProgressView()
-    let badgeVStack = UIStackView()
-    let badgeView = UIView()
-    
-    let continueButton = PrimaryButton(title: "")
-    let secondButton = PrimaryButton(title: "")
-    let thirdButton = PrimaryButton(title: "Batal")
-    
-    let mainVStack = UIStackView()
-    
-    var onClose: (() -> Void)?
-    var onRestart: (() -> Void)?
-    var onContinue: (() -> Void)?
-    
-    var data: TargetModel?
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setup()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setup() {
-        backgroundColor = .white
-        layer.cornerRadius = 24
-        layer.borderWidth = 1
-        layer.borderColor = UIColor.systemGray5.cgColor
-        
-        title.font = .systemFont(ofSize: 22, weight: .semibold)
-        title.textColor = .black
-        title.numberOfLines = 0
-        title.textAlignment = .left
-        
-        subtitle.font = .systemFont(ofSize: 14)
-        subtitle.textColor = .systemGray2
-        subtitle.numberOfLines = 0
-        subtitle.textAlignment = .left
-        
-        continueButton.setColor(.primaryGreen, titleColor: .white)
-        secondButton.setColor(.white, titleColor: .primaryGreen)
-        secondButton.layer.borderColor = UIColor.primaryGreen.cgColor
-        secondButton.layer.borderWidth = 1
-        thirdButton.setColor(.white, titleColor: .primaryGreen)
-        thirdButton.setHeight(44)
-        
-        badgeTitleLabel.font = .systemFont(ofSize: 14)
-        badgeTitleLabel.textColor = .systemGray
-        badgeTitleLabel.text = "Progress sebelumnya"
-        badgeTitleLabel.textAlignment = .left
-        
-        badgeDescriptionLabel.font = .systemFont(ofSize: 14, weight: .semibold)
-        badgeDescriptionLabel.textColor = .black
-        badgeDescriptionLabel.textAlignment = .right
-        badgeDescriptionLabel.numberOfLines = 0
-        
-        [badgeTitleLabel, badgeDescriptionLabel].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            topHStack.addArrangedSubview($0)
-        }
-        
-        topHStack.axis = .horizontal
-        topHStack.distribution = .fill
-        topHStack.alignment = .bottom
-        
-        [topHStack, progressBar].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            badgeVStack.addArrangedSubview($0)
-        }
-        
-        badgeVStack.axis = .vertical
-        badgeVStack.spacing = 8
-        badgeVStack.alignment = .fill
-        badgeVStack.distribution = .fill
-        badgeVStack.translatesAutoresizingMaskIntoConstraints = false
-        
-        badgeView.addSubview(badgeVStack)
-        badgeView.layer.cornerRadius = 16
-        badgeView.backgroundColor = .backgroundGreen
-        badgeView.layer.borderColor = UIColor.primaryGreen.cgColor
-        badgeView.layer.borderWidth = 1
-        
-        [title, badgeView, subtitle, continueButton, secondButton, thirdButton].forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            mainVStack.addArrangedSubview($0)
-        }
-        
-        mainVStack.axis = .vertical
-        mainVStack.spacing = 12
-        mainVStack.alignment = .fill
-        mainVStack.distribution = .fill
-        mainVStack.translatesAutoresizingMaskIntoConstraints = false
-        
-        mainVStack.setCustomSpacing(24, after: subtitle)
-        
-        addSubview(mainVStack)
-        
-        NSLayoutConstraint.activate([
-            mainVStack.topAnchor.constraint(equalTo: topAnchor, constant: 24),
-            mainVStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24),
-            mainVStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
-            mainVStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
-            
-            badgeVStack.topAnchor.constraint(equalTo: badgeView.topAnchor, constant: 16),
-            badgeVStack.leadingAnchor.constraint(equalTo: badgeView.leadingAnchor, constant: 16),
-            badgeVStack.trailingAnchor.constraint(equalTo: badgeView.trailingAnchor, constant: -16),
-            badgeVStack.bottomAnchor.constraint(equalTo: badgeView.bottomAnchor, constant: -16),
-        ])
-        
-        thirdButton.addTarget(self, action: #selector(onCloseTapped), for: .touchUpInside)
-        secondButton.addTarget(self, action: #selector(onSecondButtonTapped), for: .touchUpInside)
-        continueButton.addTarget(self, action: #selector(onMainButtonTapped), for: .touchUpInside)
-    }
-    
-    func configure(_ data: TargetModel) {
-        self.data = data
-        
-        switch data.status {
-        case .inActive:
-            title.text = "\(data.surahName ?? "") sudah pernah kamu mulai"
-            badgeView.isHidden = false
-            
-            let percentage = CGFloat(data.completedVerseCount ?? 0)/CGFloat(data.totalVerseCount ?? 0)
-            
-            badgeDescriptionLabel.text = "\(String(format: "%.1f%%", percentage * 100))"
-            progressBar.progress = percentage
-            
-            subtitle.text = "Lanjutkan dari ayat \((data.completedVerseCount ?? 0) + 1), atau mulai ulang dari awal. Jika mulai ulang, progres sebelumnya diganti."
-            continueButton.updateTitle("Lanjutkan")
-            secondButton.updateTitle("Ulangi")
-            thirdButton.isHidden = false
-        case .done:
-            title.text = "\(data.surahName ?? "") sudah kamu selesaikan"
-            badgeView.isHidden = true
-            subtitle.text = "Kamu pernah menyelesaikan surah ini (\(data.totalVerseCount ?? 0) ayat). Jika mengulang, kamu mulai lagi dari ayat 1 dan riwayat sebelumnya tetap tersimpan."
-            continueButton.updateTitle("Ulangi")
-            secondButton.updateTitle("Kembali")
-            thirdButton.isHidden = true
-        default:
-            break
-        }
-    }
-    
-    @objc private func onMainButtonTapped() {
-        if data?.status == .inActive {
-            onContinue?()
-        } else if data?.status == .done {
-            onRestart?()
-        }
-    }
-    
-    @objc private func onSecondButtonTapped() {
-        if data?.status == .inActive {
-            onRestart?()
-        } else if data?.status == .done {
-            onClose?()
-        }
-    }
-    
-    @objc private func onCloseTapped() {
-        onClose?()
     }
 }

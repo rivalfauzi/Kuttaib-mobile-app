@@ -176,7 +176,7 @@ final class SetTargetPresenter {
         case .surah:
             guard let surah = JSONReaderHelper.getSurahData(by: mainTarget.value, data: surahData) else { return }
             
-            totalAyat = surah.numberOfAyahs
+            totalAyat = surah.numberOfAyahs ?? 0
         }
         
         targetModel.targetType = mainTarget.type

@@ -376,7 +376,7 @@ final class MemorizationViewController: BaseViewController {
                 let alertCompletedTarget = TargetCompletedView()
                 
                 let nextSurah = response.first {
-                    $0.number == previousSurah.number + 1
+                    $0.number == (previousSurah.number ?? 0) + 1
                 }
                 
                 if let nextSurah {

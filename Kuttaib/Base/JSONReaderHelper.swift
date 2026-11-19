@@ -25,30 +25,30 @@ enum JSONReaderHelper {
     
     static func getSurahInJuz(in juz: Quran.MetaData.Response.Juz.Reference, surahs: [Quran.Surah.Response]) -> [Quran.Surah.Response] {
         return surahs.filter {
-            $0.number >= juz.startAyah &&
-            $0.number <= juz.endSurah
+            $0.number ?? 0 >= juz.startAyah &&
+            $0.number ?? 0 <= juz.endSurah
         }
     }
     
     static func totalAyahInJuz(in juz: Quran.MetaData.Response.Juz.Reference, surahs: [Quran.Surah.Response]) -> Int {
         var total = 0
 
-        for surah in surahs {
-            switch surah.number {
-            case juz.startSurah ... juz.endSurah:
-                if juz.startSurah == juz.endSurah {
-                    total += juz.endAyah - juz.startAyah + 1
-                } else if surah.number == juz.startSurah {
-                    total += surah.numberOfAyahs - juz.startAyah + 1
-                } else if surah.number == juz.endSurah {
-                    total += juz.endAyah
-                } else {
-                    total += surah.numberOfAyahs
-                }
-            default:
-                break
-            }
-        }
+//        for surah in surahs {
+//            switch surah.number {
+//            case juz.startSurah ... juz.endSurah:
+//                if juz.startSurah == juz.endSurah {
+//                    total += juz.endAyah - juz.startAyah + 1
+//                } else if surah.number == juz.startSurah {
+//                    total += surah.numberOfAyahs - juz.startAyah + 1
+//                } else if surah.number == juz.endSurah {
+//                    total += juz.endAyah
+//                } else {
+//                    total += surah.numberOfAyahs
+//                }
+//            default:
+//                break
+//            }
+//        }
 
         return total
     }
