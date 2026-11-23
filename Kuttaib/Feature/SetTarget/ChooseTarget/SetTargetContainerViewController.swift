@@ -10,7 +10,6 @@ import UIKit
 final class SetTargetContainerViewController: BaseViewController {
     private let backButton = UIButton(type: .system)
     private let stepIndicator = StepIndicatorView()
-    private let skipButton = UIButton()
     private let navHStack = UIView()
     private let contentCollectionView: UICollectionView = {
         let flowLayout = UICollectionViewFlowLayout()
@@ -40,7 +39,6 @@ final class SetTargetContainerViewController: BaseViewController {
         navigationController?.setNavigationBarHidden(true, animated: false)
         setup()
         setupAction()
-//        initService()
     }
     
     private func setup() {
@@ -50,10 +48,7 @@ final class SetTargetContainerViewController: BaseViewController {
         stepIndicator.updateTotalSteps(total: presenter.targetData.count)
         stepIndicator.update(step: stepIndex)
         
-        skipButton.setTitle("Lewati", for: .normal)
-        skipButton.setTitleColor(.primaryGreen, for: .normal)
-        
-        [backButton, stepIndicator, skipButton].forEach {
+        [backButton, stepIndicator].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
             navHStack.addSubview($0)
         }
@@ -71,9 +66,6 @@ final class SetTargetContainerViewController: BaseViewController {
             
             stepIndicator.centerXAnchor.constraint(equalTo: navHStack.centerXAnchor),
             stepIndicator.centerYAnchor.constraint(equalTo: navHStack.centerYAnchor),
-            
-            skipButton.centerYAnchor.constraint(equalTo: navHStack.centerYAnchor),
-            skipButton.trailingAnchor.constraint(equalTo: navHStack.trailingAnchor),
             
             navHStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             navHStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
@@ -107,13 +99,12 @@ final class SetTargetContainerViewController: BaseViewController {
     private func setupAction() {
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
-//        skipButton.addTarget(self, action: #selector(skipButtonTapped), for: .touchUpInside)
         
         sheet.didSelect = { [weak self] item in
             guard let self else { return }
             
             dismiss(animated: true) {
-                self.setDataStore(.main, data: .init(title: item.surahName ?? "", subtitle: "", icon: "", populer: false, value: item.targetNumber ?? 0, type: TargetType.surah.rawValue))
+                self.setDataStore(.main, data: .init(title: item.title, subtitle: item.subtitle, icon: "", populer: false, value: Double(item.targetNumber), type: item.type.rawValue))
             }
         }
         
@@ -129,12 +120,6 @@ final class SetTargetContainerViewController: BaseViewController {
         guard stepIndex >= 0, stepIndex < presenter.targetData.count else {
             return
         }
-        
-//        if stepIndex == 0 {
-//            skipButton.isHidden = false
-//        } else {
-        skipButton.isHidden = true
-//        }
         
         if stepIndex == (presenter.targetData.count - 1) {
             nextButton.updateTitle("Hitung Target")
@@ -164,7 +149,7 @@ final class SetTargetContainerViewController: BaseViewController {
             
             presenter.targetDataStore.dailyTarget = .init(value: data.value, type: type)
         case .time:
-            presenter.targetDataStore.timeTarget = data.value
+            presenter.targetDataStore.timeTarget = Int(data.value)
         }
     }
     
@@ -231,6 +216,8 @@ final class SetTargetContainerViewController: BaseViewController {
     }
     
     @objc private func nextButtonTapped() {
+        print(presenter.targetDataStore)
+        
         if (stepIndex + 1) < (presenter.targetData.count) {
             stepIndex += 1
             scrollToCurrentStep()

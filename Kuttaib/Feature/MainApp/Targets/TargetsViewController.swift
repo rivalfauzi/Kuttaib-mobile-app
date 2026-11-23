@@ -142,7 +142,7 @@ final class TargetsViewController: BaseViewController {
                     
                     switchTargetBottomSheet.didSelect = { target in
                         self.dismiss(animated: true) {
-                            self.saveTarget(target: target)
+//                            self.saveTarget(target: target)
                         }
                     }
                     

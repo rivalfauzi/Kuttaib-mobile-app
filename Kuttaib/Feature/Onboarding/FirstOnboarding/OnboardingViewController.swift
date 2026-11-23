@@ -32,17 +32,6 @@ class OnboardingViewController: BaseViewController {
         super.viewDidLoad()
         view.backgroundColor = .onboardingBackground
         setup()
-        
-//        let _ = ApiRequest.request(URL(string: "http://localhost:8080/api/surah/list")!, method: .get) { result in
-//            do {
-//                let response = try result.get() as [Response]
-//                print(response)
-//            } catch {
-//                
-//            }
-//        }
-        
-        
     }
     
     override func viewDidLayoutSubviews() {
@@ -116,6 +105,26 @@ class OnboardingViewController: BaseViewController {
     }
     
     @objc private func onNextbuttonTapped() {
-        presenter.nextButtonTapped()
+        if KeychainHelper.shared.get(.userId) == nil {
+            showLoading()
+            let _ = presenter.createGuestUser {[weak self] result in
+                guard let self else { return }
+                
+                switch result {
+                case .success(let response):
+                    guard let id = response.id else { return }
+                    
+                    DispatchQueue.main.async {
+                        self.hideLoading()
+                        KeychainHelper.shared.save(id, for: .userId)
+                        self.presenter.nextButtonTapped()
+                    }
+                case .failure(let error):
+                    print("Error: \(error)")
+                }
+            }
+        } else {
+            presenter.nextButtonTapped()
+        }
     }
 }

@@ -12,7 +12,7 @@ struct MainTargetEntity {
     let subtitle: String
     let icon: String
     let populer: Bool
-    let value: Int
+    let value: Double
     var type: String?
     var iconTintColor: UIColor?
     var background: UIColor?
@@ -36,15 +36,14 @@ struct SetTargetData {
     var dailyTarget: DailyTargetData?
     var timeTarget: Int?
     
-    
     struct MainTargetData {
-        var value: Int
+        var value: Double
         var name: String?
         var type: TargetType
     }
     
     struct DailyTargetData {
-        let value: Int
+        let value: Double
         let type: DailyTargetType
     }
     

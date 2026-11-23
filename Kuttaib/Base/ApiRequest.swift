@@ -66,6 +66,8 @@ final class Session {
     }
     
     func storeCache(_ url: URL, response: URLResponse,responseBody data: Data) {
+        guard let httpResponse = response as? HTTPURLResponse, 200...299 ~= httpResponse.statusCode else { return }
+        
         urlCache.storeCachedResponse(
             CachedURLResponse(response: response, data: data),
             for: cacheRequest(url)
@@ -85,12 +87,19 @@ enum ApiRequest {
     
     static func request<Response: Decodable>(
         _ url: URL, method: HTTPMethod = .post,
+        cacheable: Bool = false,
         additionalHeaders: [String: String]? = nil,
         parameters requestBody: Encodable? = nil,
         callback: @escaping (Result<Response, Error>) -> Void
     ) -> URLSessionDataTask {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
+        
+        if cacheable, let cachedResponse = session.cache(url),
+            let decoded = try? JSONDecoder().decode(Response.self, from: cachedResponse.data) {
+            callback(.success(decoded))
+            return URLSession.shared.dataTask(with: URLRequest(url: url))
+        }
         
         let accept = "application/json"
         request.setValue(accept, forHTTPHeaderField: "Accept")
@@ -111,7 +120,7 @@ enum ApiRequest {
         }
         
         return session.request(with: request) { responsebody, response, error in
-            if let error {
+            if error != nil {
                 if let responsebody, let serialized = try? JSONSerialization.jsonObject(
                     with: responsebody, options: []
                 ) as? [String: Any] {
@@ -123,8 +132,12 @@ enum ApiRequest {
                 return
             }
             
-            if let responsebody, let response = response as? HTTPURLResponse {
+            if let responsebody, response != nil {
                 if let decoded = try? JSONDecoder().decode(Response.self, from: responsebody) {
+                    if cacheable, let response {
+                        session.storeCache(url, response: response, responseBody: responsebody)
+                    }
+                    
                     callback(.success(decoded))
                 } else {
                     callback(.failure(URLError(.cannotDecodeRawData)))

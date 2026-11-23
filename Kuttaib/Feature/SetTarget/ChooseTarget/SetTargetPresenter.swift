@@ -129,15 +129,15 @@ final class SetTargetPresenter {
         let group = DispatchGroup()
         var saveError: Error?
         
-        group.enter()
-        let user = UserModel(name: "Penghafal", dailyVerseTarget: dailyTarget, dailyStudyTime: timeTarget, reminderEnabled: false)
-        
-        UserRepository.saveUser(data: user) { result in
-            if case .failure(let error) = result {
-                saveError = error
-            }
-            group.leave()
-        }
+//        group.enter()
+//        let user = UserModel(name: "Penghafal", dailyVerseTarget: dailyTarget, dailyStudyTime: timeTarget, reminderEnabled: false)
+//        
+//        UserRepository.saveUser(data: user) { result in
+//            if case .failure(let error) = result {
+//                saveError = error
+//            }
+//            group.leave()
+//        }
         
         group.enter()
         TargetRepository.createTarget(data: targetModel) { result in
@@ -159,28 +159,30 @@ final class SetTargetPresenter {
     func calculateTarget(_ metaData: Quran.MetaData.Response, callback: @escaping ([MainTargetEntity]) -> Void) {
         guard let dailyTarget = targetDataStore.dailyTarget,
             let mainTarget = targetDataStore.mainTarget,
-            let timeTarget = targetDataStore.timeTarget,
-            let surahData
+            let timeTarget = targetDataStore.timeTarget
+//            let surahData
         else { return }
         
-        var totalAyat: Int
-        var daysEstimate: Int
+        let totalAyat: Int = 0
+        let daysEstimate: Int
         
         switch mainTarget.type {
         case .juz:
-            guard let juzData = JSONReaderHelper.getJuzData(by: mainTarget.value, data: metaData) else { return }
-            
-            let arrayOfSurahs = JSONReaderHelper.getSurahInJuz(in: juzData, surahs: surahData)
-            
-            totalAyat = JSONReaderHelper.totalAyahInJuz(in: juzData, surahs: arrayOfSurahs)
+            break
+//            guard let juzData = JSONReaderHelper.getJuzData(by: mainTarget.value, data: metaData) else { return }
+//            
+//            let arrayOfSurahs = JSONReaderHelper.getSurahInJuz(in: juzData, surahs: surahData)
+//            
+//            totalAyat = JSONReaderHelper.totalAyahInJuz(in: juzData, surahs: arrayOfSurahs)
         case .surah:
-            guard let surah = JSONReaderHelper.getSurahData(by: mainTarget.value, data: surahData) else { return }
-            
-            totalAyat = surah.numberOfAyahs ?? 0
+            break
+//            guard let surah = JSONReaderHelper.getSurahData(by: mainTarget.value, data: surahData) else { return }
+//            
+//            totalAyat = surah.numberOfAyahs ?? 0
         }
         
         targetModel.targetType = mainTarget.type
-        targetModel.targetNumber = mainTarget.value
+//        targetModel.targetNumber = mainTarget.value
         targetModel.surahName = mainTarget.name
         targetModel.totalVerseCount = totalAyat
 

@@ -13,3 +13,10 @@ struct UserModel {
     var dailyStudyTime: Int
     var reminderEnabled: Bool
 }
+
+struct UserDataModel: Decodable {
+    let id: String?
+    let name: String?
+    let dailyVerseTarget: Double?
+    let dailyStudyTime: Int?
+}

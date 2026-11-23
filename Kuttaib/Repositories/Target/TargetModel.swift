@@ -25,3 +25,11 @@ enum TargetStatus: String {
     case inActive
     case done
 }
+
+struct CreateTargetOnboardingRequest: Encodable {
+    var targetType: String
+    var targetNumber: Double
+    var dailyTargetType: String
+    var dailyTargetNumber: Double
+    var dailyTime: Int
+}

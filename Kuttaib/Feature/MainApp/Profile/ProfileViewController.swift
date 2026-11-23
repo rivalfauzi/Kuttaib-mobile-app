@@ -168,7 +168,7 @@ final class ProfileViewController: BaseViewController {
                         
                         switchTargetBottomSheet.didSelect = { target in
                             self.dismiss(animated: true) {
-                                self.targetChange(target)
+//                                self.targetChange(target)
                             }
                         }
                         

@@ -228,7 +228,7 @@ extension ProfileTargetPopupViewController: UICollectionViewDelegate, UICollecti
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainTargetCell.identifier, for: indexPath) as! MainTargetCell
         
         let item = items[indexPath.item]
-        let isSelected = selectedValue == item.value
+        let isSelected = selectedValue == Int(item.value)
         
         cell.setConfig(item, isSelected: isSelected)
         
@@ -236,7 +236,7 @@ extension ProfileTargetPopupViewController: UICollectionViewDelegate, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        selectedValue = items[indexPath.item].value
+//        selectedValue = items[indexPath.item].value
         collectionView.reloadData()
     }
 }

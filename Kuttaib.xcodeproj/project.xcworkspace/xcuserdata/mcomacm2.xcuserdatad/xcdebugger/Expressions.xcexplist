@@ -10,5 +10,13 @@
             </PersistentString>
          </PersistentStrings>
       </ContextState>
+      <ContextState
+         contextName = "TargetPickerBottomSheet.tableView(_:cellForRowAt:):TargetPickerBottomSheet.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "selectedData == item">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
    </ContextStates>
 </VariablesViewState>

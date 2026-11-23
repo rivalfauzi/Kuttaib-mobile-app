@@ -14,8 +14,12 @@ final class OnboardingPresenter {
         self.coordinator = coordinator
     }
     
+    func createGuestUser(callback: @escaping(Result<UserDataModel, Error>) -> Void) -> URLSessionDataTask {
+        return UserRepository.createGuestUserV2(callback: callback)
+    }
+    
     func nextButtonTapped() {
-        coordinator.navigate()
+        coordinator.navigate(.setTarget)
     }
     
     

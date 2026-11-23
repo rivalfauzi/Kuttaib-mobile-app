@@ -39,7 +39,7 @@ final class TargetPickerBottomSheet: UIViewController {
     private let footerButton = PrimaryButton(title: "Pilih")
     private let footerVStack = UIStackView()
     
-    var didSelect: ((TargetModel) -> Void)?
+    var didSelect: ((TargetPickerCellEntity) -> Void)?
     var onClose: (() -> Void)?
     
     struct SurahListResponse: Decodable {
@@ -70,6 +70,10 @@ final class TargetPickerBottomSheet: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setup()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         fetch()
     }
     
@@ -162,7 +166,6 @@ final class TargetPickerBottomSheet: UIViewController {
         infoHStack.spacing = 8
         infoHStack.alignment = .center
         infoHStack.distribution = .fill
-        infoHStack.isHidden = selectedData == nil
         
         [topHStack, tabStack, searchTextField, infoHStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -265,8 +268,10 @@ final class TargetPickerBottomSheet: UIViewController {
         surahButton.addTarget(self, action: #selector(surahTapped), for: .touchUpInside)
     }
     
-    func setData(_ target: TargetPickerCellEntity) {
+    func setData(_ target: TargetPickerCellEntity, descriptionHide: Bool = true) {
         previousData = target
+        selectedData = target
+        infoHStack.isHidden = descriptionHide
     }
     
     private func updateTabState() {
@@ -327,7 +332,11 @@ final class TargetPickerBottomSheet: UIViewController {
     
     @objc private func onCloseTapped() {
         dismiss(animated: true) {[weak self] in
-            self?.onClose?()
+            guard let self else { return }
+            selectedData = nil
+            previousData = nil
+            updateButton()
+            onClose?()
         }
     }
     
@@ -337,17 +346,11 @@ final class TargetPickerBottomSheet: UIViewController {
     
     @objc private func onSelectTapped() {
         guard let selectedData else { return }
-        var targetModel = TargetModel()
-        targetModel.targetType = selectedData.type
-        targetModel.targetNumber = selectedData.targetNumber
-        targetModel.totalVerseCount = selectedData.totalCount
-        
-        didSelect?(targetModel)
+        didSelect?(selectedData)
     }
     
     @objc private func juzTapped() {
         selectedTab = .juz
-        selectedData = nil
         updateTabState()
         updateButton()
         tableView.reloadData()
@@ -355,7 +358,6 @@ final class TargetPickerBottomSheet: UIViewController {
 
     @objc private func surahTapped() {
         selectedTab = .surah
-        selectedData = nil
         updateTabState()
         updateButton()
         tableView.reloadData()
@@ -380,8 +382,9 @@ extension TargetPickerBottomSheet {
         }
         
         content.onContinue = {[weak self] in
+            guard let self, let selectedData else { return }
             alert.dismissAlert()
-            self?.didSelect?(targetModel)
+            didSelect?(selectedData)
         }
         
         alert.setContent(content)
@@ -395,37 +398,45 @@ extension TargetPickerBottomSheet {
         newTarget.completedVerseCount = 0
         newTarget.completedAt = nil
         
-        self.didSelect?(newTarget)
+//        self.didSelect?(newTarget)
     }
     
     private func fetch() {
         let group = DispatchGroup()
+        var errorFlow: Bool = false
         
         group.enter()
-        let _ = ApiRequest.request(URL(string: "http://localhost:8080/api/surah/list")!, method: .get) {[weak self] result in
+        let _ = ApiRequest.request(Endpoint.Surah.SurahList.url, method: .get, cacheable: true) {[weak self] result in
             defer { group.leave() }
             
             do {
                 let response = try result.get() as [SurahListResponse]
                 self?.originalSurahsData = response
             } catch {
+                errorFlow = true
                 print("Error: \(error)")
             }
         }
         
         group.enter()
-        let _ = ApiRequest.request(URL(string: "http://localhost:8080/api/juz/list")!, method: .get) {[weak self] result in
+        let _ = ApiRequest.request(Endpoint.Juz.JuzList.url, method: .get, cacheable: true) {[weak self] result in
             defer { group.leave() }
             
             do {
                 let response = try result.get() as [JuzListResponse]
                 self?.originalJuzsData = response
             } catch {
+                errorFlow = true
                 print("Error: \(error)")
             }
         }
         
         group.notify(queue: .main) {[weak self] in
+            guard !errorFlow else {
+                Snackbar.show(.error, "Sedang Terjadi Kendala")
+                return
+            }
+            
             self?.updateFilteredData()
         }
     }

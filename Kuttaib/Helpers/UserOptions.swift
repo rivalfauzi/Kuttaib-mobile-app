@@ -26,6 +26,40 @@ enum UserOptions {
         static let minutes = Array(0...59)
     }
     
+    static let mainTarget: [MainTargetEntity] = [
+        .init(
+            title: "An-Naba",
+            subtitle: "Cocok untuk pemula",
+            icon: "book.pages.fill",
+            populer: true,
+            value: 78,
+            type: TargetType.surah.rawValue
+        ),
+        .init(
+            title: "Juz 30",
+            subtitle: "Paling sering dibaca",
+            icon: "moon.stars.fill",
+            populer: false,
+            value: 30,
+            type: TargetType.juz.rawValue
+        ),
+        .init(
+            title: "Ar-Rahmaan",
+            subtitle: "Favorit banyak penghafal",
+            icon: "sparkles",
+            populer: false,
+            value: 55,
+            type: TargetType.surah.rawValue
+        ),
+        .init(
+            title: "Custom",
+            subtitle: "Pilih surah atau juz",
+            icon: "slider.horizontal.3",
+            populer: false,
+            value: 0
+        )
+    ]
+    
     static let dailyVersesTarget: [MainTargetEntity] = [
         .init(
             title: "3 ayat",
@@ -54,6 +88,36 @@ enum UserOptions {
             populer: false,
             value: 10,
             type: SetTargetData.DailyTargetType.ayat.rawValue,
+            iconTintColor: .primaryBlue,
+            background: .backgroundBlue
+        ),
+        .init(
+            title: "1/4 halaman",
+            subtitle: "± 4 baris · Santai dan konsisten",
+            icon: "leaf.fill",
+            populer: false,
+            value: 0.25,
+            type: SetTargetData.DailyTargetType.page.rawValue,
+            iconTintColor: .primaryGold,
+            background: .backgroundGold
+        ),
+        .init(
+            title: "1/2 halaman",
+            subtitle: "± 8 baris · Seimbang dan efektif",
+            icon: "tree.fill",
+            populer: false,
+            value: 0.5,
+            type: SetTargetData.DailyTargetType.page.rawValue,
+            iconTintColor: .primaryGreen,
+            background: .backgroundGreen
+        ),
+        .init(
+            title: "1 halaman",
+            subtitle: "15 baris · Lebih cepat",
+            icon: "sparkles",
+            populer: false,
+            value: 1,
+            type: SetTargetData.DailyTargetType.page.rawValue,
             iconTintColor: .primaryBlue,
             background: .backgroundBlue
         )

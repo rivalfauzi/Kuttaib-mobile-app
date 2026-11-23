@@ -45,4 +45,8 @@ enum UserRepository {
             callback(.failure(error))
         }
     }
+    
+    static func createGuestUserV2(callback: @escaping(Result<UserDataModel, any Error>) -> Void) -> URLSessionDataTask {
+        return ApiRequest.request(Endpoint.Onboarding.CreateGuestUser.url, callback: callback)
+    }
 }
