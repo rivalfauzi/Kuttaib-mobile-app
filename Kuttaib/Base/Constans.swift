@@ -43,17 +43,31 @@ enum Endpoint {
             URL(string: baseURL + Self.mainPath + path)!
         }
     }
+    
+    enum Target {
+        private static let mainPath = "/target"
+        
+        case CreateOnboardingTarget
+        
+        var path: String {
+            switch self {
+            case .CreateOnboardingTarget:
+                return "/create-onboarding"
+            }
+        }
+        
+        var url: URL {
+            URL(string: baseURL + Self.mainPath + path)!
+        }
+    }
 
     enum Onboarding {
         private static let mainPath = "/onboarding"
         
-        case CreateTargetOnboarding
         case CreateGuestUser
         
         var path: String {
             switch self {
-            case .CreateTargetOnboarding:
-                return "/create-target"
             case .CreateGuestUser:
                 return "/guests"
             }

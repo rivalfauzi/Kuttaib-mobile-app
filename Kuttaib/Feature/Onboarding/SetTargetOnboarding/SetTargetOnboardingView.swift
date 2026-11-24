@@ -96,6 +96,7 @@ final class SetTargetOnboardingView: BaseViewController {
             guard let self else { return }
             presenter.targetDataStore.timeTarget = Int(item.value)
             
+            print(presenter.targetDataStore)
         }
     }
     
