@@ -27,19 +27,19 @@ enum TargetStatus: String {
 }
 
 struct CreateTargetOnboardingRequest: Encodable {
-    var targetType: String
-    var targetNumber: Int
-    var targetName: String
+    var userId: String
+    var dailyTarget: Double
     var dailyTargetType: String
-    var dailyTargetNumber: Double
-    var dailyTime: Int
+    var targetNumber: Int
+    var targetType: String
+    var targetTime: Int
 }
 
 struct CreateTargetOnboardingResponse: Decodable {
     let id: String
-    let target: String?
-    let targetType: String?
-    let totalTarget: Int?
-    let targetDailyTime: Int?
-    let estimation: Int?
+    let targetName: String?
+    let targetDescription: String?
+    let dailyTargetString: String?
+    let targetDailyTime: String?
+    let estimation: String?
 }

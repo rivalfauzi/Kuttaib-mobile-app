@@ -15,6 +15,7 @@ class BaseViewController: UIViewController {
         view.backgroundColor = .warmBackground
     }
     
+    @MainActor
     func showLoading() {
         guard loadingView == nil else { return }
 
@@ -33,6 +34,7 @@ class BaseViewController: UIViewController {
         self.loadingView = loadingView
     }
 
+    @MainActor
     func hideLoading() {
         loadingView?.removeFromSuperview()
         loadingView = nil

@@ -7,7 +7,7 @@
 
 import UIKit
 
-struct MainTargetEntity {
+struct GeneralTargetEntity {
     let title: String
     let subtitle: String
     let icon: String
@@ -22,7 +22,7 @@ struct SetTargetEntity {
     let title: String
     let subtitle: String
     let type: SetTargetViewType
-    var items: [MainTargetEntity]
+    var items: [GeneralTargetEntity]
 }
 
 enum SetTargetViewType {
@@ -38,7 +38,6 @@ struct SetTargetData {
     
     struct MainTargetData {
         var value: Double
-        var name: String?
         var type: TargetType
     }
     
@@ -48,12 +47,12 @@ struct SetTargetData {
     }
     
     enum DailyTargetType: String {
-        case ayat
-        case page
+        case ayah = "AYAH"
+        case page = "PAGE"
     }
 }
 
 enum TargetType: String {
-    case juz
-    case surah
+    case juz = "JUZ"
+    case surah = "SURAH"
 }

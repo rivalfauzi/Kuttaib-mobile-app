@@ -45,7 +45,7 @@ enum Endpoint {
     }
     
     enum Target {
-        private static let mainPath = "/target"
+        private static let mainPath = "/targets"
         
         case CreateOnboardingTarget
         

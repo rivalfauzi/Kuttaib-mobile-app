@@ -26,7 +26,7 @@ enum UserOptions {
         static let minutes = Array(0...59)
     }
     
-    static let mainTarget: [MainTargetEntity] = [
+    static let mainTarget: [GeneralTargetEntity] = [
         .init(
             title: "An-Naba",
             subtitle: "Cocok untuk pemula",
@@ -60,14 +60,14 @@ enum UserOptions {
         )
     ]
     
-    static let dailyVersesTarget: [MainTargetEntity] = [
+    static let dailyVersesTarget: [GeneralTargetEntity] = [
         .init(
             title: "3 ayat",
             subtitle: "Santai dan konsisten",
             icon: "leaf.fill",
             populer: false,
             value: 3,
-            type: SetTargetData.DailyTargetType.ayat.rawValue,
+            type: SetTargetData.DailyTargetType.ayah.rawValue,
             iconTintColor: .primaryGold,
             background: .backgroundGold
         ),
@@ -77,7 +77,7 @@ enum UserOptions {
             icon: "tree.fill",
             populer: false,
             value: 5,
-            type: SetTargetData.DailyTargetType.ayat.rawValue,
+            type: SetTargetData.DailyTargetType.ayah.rawValue,
             iconTintColor: .primaryGreen,
             background: .backgroundGreen
         ),
@@ -87,7 +87,7 @@ enum UserOptions {
             icon: "sparkles",
             populer: false,
             value: 10,
-            type: SetTargetData.DailyTargetType.ayat.rawValue,
+            type: SetTargetData.DailyTargetType.ayah.rawValue,
             iconTintColor: .primaryBlue,
             background: .backgroundBlue
         ),
@@ -123,7 +123,7 @@ enum UserOptions {
         )
     ]
     
-    static let dailyTimeTarget: [MainTargetEntity] = [
+    static let dailyTimeTarget: [GeneralTargetEntity] = [
         .init(
             title: "10 menit",
             subtitle: "Cukup untuk memulai",

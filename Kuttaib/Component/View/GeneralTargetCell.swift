@@ -7,7 +7,7 @@
 
 import UIKit
 
-final class MainTargetCell: UICollectionViewCell {
+final class GeneralTargetCell: UICollectionViewCell {
 
     static let identifier = "MainTargetCell"
 
@@ -109,7 +109,7 @@ final class MainTargetCell: UICollectionViewCell {
         ])
     }
     
-    func setConfig(_ item: MainTargetEntity, isSelected: Bool = false) {
+    func setConfig(_ item: GeneralTargetEntity, isSelected: Bool = false) {
         titleLabel.text = item.title
         subtitleLabel.text = item.subtitle
         icon.configure(iconImage: UIImage(systemName: item.icon), iconTintColor: item.iconTintColor ?? .primaryGreen, background: item.background ?? .systemGray6, cornerRadius: 8)

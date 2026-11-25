@@ -81,7 +81,7 @@ final class SetTargetOnboardingView: BaseViewController {
         mainTarget.didNext = {[weak self] item in
             guard let self, let type = TargetType(rawValue: item.type ?? "") else { return }
             dailyTarget.setConfiguration(UserOptions.dailyVersesTarget, mainTargetType: type)
-            presenter.targetDataStore.mainTarget = .init(value: item.value, name: item.title, type: type)
+            presenter.targetDataStore.mainTarget = .init(value: item.value, type: type)
             moveToPage(index: (stepIndex + 1))
         }
         
@@ -94,9 +94,19 @@ final class SetTargetOnboardingView: BaseViewController {
         
         timeTarget.didNext = {[weak self] item in
             guard let self else { return }
+            showLoading()
             presenter.targetDataStore.timeTarget = Int(item.value)
             
-            print(presenter.targetDataStore)
+            let _ = presenter.createTargetOnboarding { result in
+                defer { self.hideLoading() }
+                
+                switch result {
+                case .success(let response):
+                    self.presenter.navigateTo(.confirm(response))
+                case .failure(let error):
+                    print("Error: \(error)")
+                }
+            }
         }
     }
     

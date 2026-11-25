@@ -19,9 +19,9 @@ final class ProfileTargetCard: UIView {
     private let mainTarget = ProfileTargetTableCell()
     private let contentView = UIView()
     
-    var onTargetTapped: ((TargetType) -> Void)?
+    var onTargetTapped: ((ProfileTargetType) -> Void)?
     
-    enum TargetType {
+    enum ProfileTargetType {
         case memorization
         case dailyTime
         case target
@@ -105,7 +105,7 @@ final class ProfileTargetCard: UIView {
         }
     }
     
-    func configure(subtitle: String, type: TargetType) {
+    func configure(subtitle: String, type: ProfileTargetType) {
         switch type {
         case .memorization:
             memorizationTarget.isHidden = false

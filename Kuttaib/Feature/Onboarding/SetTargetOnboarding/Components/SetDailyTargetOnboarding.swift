@@ -21,12 +21,12 @@ final class SetDailyTargetOnboarding: UIViewController {
     private let nextButton = PrimaryButton(title: "Lanjutkan")
     
     private var selectedIndex: Int?
-    private var selectedTarget: MainTargetEntity?
-    private var sourceOfItems: [MainTargetEntity] = []
-    private var items: [MainTargetEntity] = []
-    private var type: SetTargetData.DailyTargetType = .ayat
+    private var selectedTarget: GeneralTargetEntity?
+    private var sourceOfItems: [GeneralTargetEntity] = []
+    private var items: [GeneralTargetEntity] = []
+    private var type: SetTargetData.DailyTargetType = .ayah
     
-    var didNext: ((MainTargetEntity)->Void)?
+    var didNext: ((GeneralTargetEntity)->Void)?
     
     override init(nibName nibNameOrNil: String? = nil, bundle nibBundleOrNil: Bundle? = nil) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -118,7 +118,7 @@ final class SetDailyTargetOnboarding: UIViewController {
         contentCollectionView.dataSource = self
         contentCollectionView.backgroundColor = .clear
         
-        contentCollectionView.register(MainTargetCell.self, forCellWithReuseIdentifier: MainTargetCell.identifier)
+        contentCollectionView.register(GeneralTargetCell.self, forCellWithReuseIdentifier: GeneralTargetCell.identifier)
     }
     
     private func updateButton() {
@@ -133,7 +133,7 @@ final class SetDailyTargetOnboarding: UIViewController {
         contentCollectionView.reloadData()
     }
     
-    func setConfiguration(_ item: [MainTargetEntity], mainTargetType: TargetType = .surah) {
+    func setConfiguration(_ item: [GeneralTargetEntity], mainTargetType: TargetType = .surah) {
         sourceOfItems = item
         tabControl.isHidden = mainTargetType == .surah
         updateItems()
@@ -145,7 +145,7 @@ final class SetDailyTargetOnboarding: UIViewController {
     }
     
     @objc private func tabChanged() {
-        type = tabControl.selectedSegmentIndex == 0 ? .ayat : .page
+        type = tabControl.selectedSegmentIndex == 0 ? .ayah : .page
         selectedIndex = nil
         selectedTarget = nil
         updateButton()
@@ -159,7 +159,7 @@ extension SetDailyTargetOnboarding: UICollectionViewDelegate, UICollectionViewDa
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainTargetCell.identifier, for: indexPath) as? MainTargetCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GeneralTargetCell.identifier, for: indexPath) as? GeneralTargetCell else {
             return UICollectionViewCell()
         }
         

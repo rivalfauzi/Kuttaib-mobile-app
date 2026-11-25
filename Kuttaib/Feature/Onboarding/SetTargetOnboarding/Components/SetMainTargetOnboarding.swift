@@ -19,10 +19,10 @@ final class SetMainTargetOnboarding: UIViewController {
     private let sheet = TargetPickerBottomSheet()
     
     private var selectedIndex: Int?
-    private var selectedTarget: MainTargetEntity?
-    private var items: [MainTargetEntity] = []
+    private var selectedTarget: GeneralTargetEntity?
+    private var items: [GeneralTargetEntity] = []
     
-    var didNext: ((MainTargetEntity)->Void)?
+    var didNext: ((GeneralTargetEntity)->Void)?
     
     override init(nibName nibNameOrNil: String? = nil, bundle nibBundleOrNil: Bundle? = nil) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -92,14 +92,14 @@ final class SetMainTargetOnboarding: UIViewController {
         contentCollectionView.dataSource = self
         contentCollectionView.backgroundColor = .clear
         
-        contentCollectionView.register(MainTargetCell.self, forCellWithReuseIdentifier: MainTargetCell.identifier)
+        contentCollectionView.register(GeneralTargetCell.self, forCellWithReuseIdentifier: GeneralTargetCell.identifier)
     }
     
     private func setupAction() {
         sheet.didSelect = { [weak self] item in
             guard let self else { return }
             dismiss(animated: true) {
-                let newTarget = MainTargetEntity(
+                let newTarget = GeneralTargetEntity(
                     title: item.title,
                     subtitle: item.subtitle,
                     icon: "",
@@ -121,7 +121,7 @@ final class SetMainTargetOnboarding: UIViewController {
         nextButton.isEnabled = selectedIndex != nil
     }
     
-    func setConfiguration(_ item: [MainTargetEntity], selected: MainTargetEntity? = nil) {
+    func setConfiguration(_ item: [GeneralTargetEntity], selected: GeneralTargetEntity? = nil) {
         items = item
         selectedTarget = selected
         contentCollectionView.reloadData()
@@ -139,7 +139,7 @@ extension SetMainTargetOnboarding: UICollectionViewDelegate, UICollectionViewDat
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainTargetCell.identifier, for: indexPath) as? MainTargetCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GeneralTargetCell.identifier, for: indexPath) as? GeneralTargetCell else {
             return UICollectionViewCell()
         }
         

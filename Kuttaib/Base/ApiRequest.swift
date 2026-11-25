@@ -119,34 +119,67 @@ enum ApiRequest {
             request.httpBody = encoded
         }
         
-        return session.request(with: request) { responsebody, response, error in
-            if error != nil {
-                if let responsebody, let serialized = try? JSONSerialization.jsonObject(
-                    with: responsebody, options: []
-                ) as? [String: Any] {
-                    callback(.failure(URLError(.badServerResponse, userInfo: serialized)))
-                } else {
+        return session.request(with: request) { responseBody, response, error in
+            if let error {
+                DispatchQueue.main.async {
+                    callback(.failure(error))
+                }
+                return
+            }
+            
+            guard let responseBody else {
+                DispatchQueue.main.async {
                     callback(.failure(URLError(.badServerResponse)))
                 }
-                
                 return
             }
             
-            if let responsebody, response != nil {
-                if let decoded = try? JSONDecoder().decode(Response.self, from: responsebody) {
-                    if cacheable, let response {
-                        session.storeCache(url, response: response, responseBody: responsebody)
+            do {
+                let apiResponse = try JSONDecoder().decode(ApiResponse<Response>.self, from: responseBody)
+                
+                if apiResponse.success {
+                    guard let data = apiResponse.data else {
+                        DispatchQueue.main.async {
+                            callback(.failure(ApiError(message: "Data kosong")))
+                        }
+                        
+                        return
                     }
                     
-                    callback(.success(decoded))
+                    if cacheable, let response {
+                        session.storeCache(url, response: response, responseBody: responseBody)
+                    }
+                    
+                    DispatchQueue.main.async {
+                        callback(.success(data))
+                    }
                 } else {
-                    callback(.failure(URLError(.cannotDecodeRawData)))
+                    DispatchQueue.main.async {
+                        callback(.failure(ApiError(message: apiResponse.message)))
+                    }
                 }
+            } catch {
+                print(String(data: responseBody, encoding: .utf8) ?? "")
                 
-                return
+                DispatchQueue.main.async {
+                    callback(.failure(error))
+                }
             }
-            
-            callback(.failure(URLError(.unknown)))
         }
+    }
+}
+
+struct ApiResponse<T: Decodable>: Decodable {
+    let success: Bool
+    let message: String
+    let data: T?
+}
+
+struct ApiError: LocalizedError {
+
+    let message: String
+
+    var errorDescription: String? {
+        message
     }
 }

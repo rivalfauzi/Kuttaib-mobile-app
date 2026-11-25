@@ -42,9 +42,6 @@ extension MainCoordinator {
         switch to {
         case .back:
             navigationController.popViewController(animated: true)
-        case .setTarget:
-            let coordinator = SetTargetCoordinator(mainCoordinator: self)
-            coordinator.start()
         case .mainApp:
             showMainApp()
         }
@@ -53,6 +50,5 @@ extension MainCoordinator {
 
 enum NavigateTo {
     case back
-    case setTarget
     case mainApp
 }

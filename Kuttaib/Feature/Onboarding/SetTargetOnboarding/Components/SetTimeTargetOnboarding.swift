@@ -18,10 +18,10 @@ final class SetTimeTargetOnboarding: UIViewController {
     private let nextButton = PrimaryButton(title: "Hitung Target")
     
     private var selectedIndex: Int?
-    private var selectedTarget: MainTargetEntity?
-    private var items: [MainTargetEntity] = []
+    private var selectedTarget: GeneralTargetEntity?
+    private var items: [GeneralTargetEntity] = []
     
-    var didNext: ((MainTargetEntity)->Void)?
+    var didNext: ((GeneralTargetEntity)->Void)?
     
     override init(nibName nibNameOrNil: String? = nil, bundle nibBundleOrNil: Bundle? = nil) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -90,14 +90,14 @@ final class SetTimeTargetOnboarding: UIViewController {
         contentCollectionView.dataSource = self
         contentCollectionView.backgroundColor = .clear
         
-        contentCollectionView.register(MainTargetCell.self, forCellWithReuseIdentifier: MainTargetCell.identifier)
+        contentCollectionView.register(GeneralTargetCell.self, forCellWithReuseIdentifier: GeneralTargetCell.identifier)
     }
     
     private func updateButton() {
         nextButton.isEnabled = selectedIndex != nil
     }
     
-    func setConfiguration(_ item: [MainTargetEntity]) {
+    func setConfiguration(_ item: [GeneralTargetEntity]) {
         items = item
     }
     
@@ -113,7 +113,7 @@ extension SetTimeTargetOnboarding: UICollectionViewDelegate, UICollectionViewDat
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainTargetCell.identifier, for: indexPath) as? MainTargetCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GeneralTargetCell.identifier, for: indexPath) as? GeneralTargetCell else {
             return UICollectionViewCell()
         }
         

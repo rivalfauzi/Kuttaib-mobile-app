@@ -166,6 +166,7 @@ final class TargetPickerBottomSheet: UIViewController {
         infoHStack.spacing = 8
         infoHStack.alignment = .center
         infoHStack.distribution = .fill
+        infoHStack.isHidden = true
         
         [topHStack, tabStack, searchTextField, infoHStack].forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false

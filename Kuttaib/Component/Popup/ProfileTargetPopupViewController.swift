@@ -32,7 +32,7 @@ final class ProfileTargetPopupViewController: UIViewController {
     
     var onSaveTapped: ((Int, SetTargetViewType)->Void)?
     
-    private var items: [MainTargetEntity] = []
+    private var items: [GeneralTargetEntity] = []
     private var selectedValue: Int?
     private var dataType: SetTargetViewType?
     
@@ -77,7 +77,7 @@ final class ProfileTargetPopupViewController: UIViewController {
         
         collectionView.delegate = self
         collectionView.dataSource = self
-        collectionView.register(MainTargetCell.self, forCellWithReuseIdentifier: MainTargetCell.identifier)
+        collectionView.register(GeneralTargetCell.self, forCellWithReuseIdentifier: GeneralTargetCell.identifier)
         collectionHeightConstraint = collectionView.heightAnchor.constraint(equalToConstant: 1)
         
         bottomConstraint = containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
@@ -164,7 +164,7 @@ final class ProfileTargetPopupViewController: UIViewController {
         dimmedView.addGestureRecognizer(tapGesture)
     }
     
-    func configure(data: [MainTargetEntity], value: Int, title: String, subtitle: String, type: SetTargetViewType, todayZiyadah: Bool) {
+    func configure(data: [GeneralTargetEntity], value: Int, title: String, subtitle: String, type: SetTargetViewType, todayZiyadah: Bool) {
         items = data
         selectedValue = value
         
@@ -225,7 +225,7 @@ extension ProfileTargetPopupViewController: UICollectionViewDelegate, UICollecti
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: MainTargetCell.identifier, for: indexPath) as! MainTargetCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: GeneralTargetCell.identifier, for: indexPath) as! GeneralTargetCell
         
         let item = items[indexPath.item]
         let isSelected = selectedValue == Int(item.value)

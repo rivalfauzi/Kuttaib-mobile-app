@@ -13,7 +13,8 @@ class OnboardingCoordinator {
     
     enum Navigation {
         case setTarget
-        case confirm
+        case confirm(CreateTargetOnboardingResponse)
+        case home
     }
     
     init(mainCoordinator: MainCoordinator) {
@@ -33,10 +34,12 @@ class OnboardingCoordinator {
             let presenter = SetTargetOnboardingPresenter(coordinator: self)
             let vc = SetTargetOnboardingView(presenter: presenter)
             navigationController.pushViewController(vc, animated: true)
-        case .confirm:
-            break
+        case .confirm(let data):
+            let presenter = ConfirmTargetOnboardingPresenter(coordinator: self, data: data)
+            let vc = ConfirmTargetOnboardingView(presenter: presenter)
+            navigationController.pushViewController(vc, animated: true)
+        case .home:
+            mainCoordinator.navigate(to: .mainApp)
         }
-        
-//        mainCoordinator.navigate(to: .setTarget)
     }
 }
